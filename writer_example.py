@@ -65,7 +65,7 @@ def read_data(record_filenames,compression_type='GZIP'):
         example = data_serialize.Example()
         example.ParseFromString(x)
         feature = example.features.feature
-        return x
+        return feature
 
     dataset_reader = dataset_reader.apply(parse_fn)
 
