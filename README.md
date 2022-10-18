@@ -80,8 +80,12 @@ def read_data(record_filenames,compression_type='GZIP'):
 
 
     for example in dataset_reader:
-        print(example)
-        print(example['input_ids'])
+        input_ids = example['input_ids'].int64_list
+        seg_ids= example['seg_ids'].int64_list
+        other = example['other'].bytes_list
+        labels = example['labels'].bytes_list
+        print(input_ids[0])
+        print(other[0],other[1],labels[0])
         break
 
 if __name__ == '__main__':
@@ -104,7 +108,9 @@ if __name__ == '__main__':
             'data': [bytes(json.dumps(labels,ensure_ascii=True),encoding='utf-8')]
         }
     }
+
     record_num = 50000
+    print('gen {} data ....'.format(record_num))
     data = [copy.deepcopy(node) for i in range(record_num)]
 
     out_dir = '/tmp/raw_record'
