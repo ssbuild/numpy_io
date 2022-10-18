@@ -1,10 +1,10 @@
 # fastdatasets tfrecords examples
 
-## 安装
+## 1. 安装
 pip install -U fastdatasets
 
 
-## 写大文件 shuffle 数据
+## 2. 写大文件 shuffle 数据
 
 ```python
 import os
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
 
 
-## 读取大文件多文件records
+## 3. 读取大文件多文件records
 
 ```python
 from fastdatasets import TFRecordOptions,RecordLoader,FeatrueWriter,DataType,gfile
