@@ -7,9 +7,11 @@ pip install -U fastdatasets
 ## 2. 写大文件 shuffle 数据
 
 ```python
-import os
 import json
+import os
 import random
+
+import data_serialize
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
@@ -63,7 +65,26 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
     for writer in writers:
         writer.close()
 
+def read_data(record_filenames,compression_type='GZIP'):
+    options = TFRecordOptions(compression_type=compression_type)
+    dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
+
+    def parse_fn(x):
+        example = data_serialize.Example()
+        example.ParseFromString(x)
+        feature = example.features.feature
+        return x
+
+    dataset_reader = dataset_reader.apply(parse_fn)
+
+
+    for example in dataset_reader:
+        print(example)
+        print(example['input_ids'])
+        break
+
 if __name__ == '__main__':
+
     labels = [0,0,0,1]
     node = {
         'input_ids': {
@@ -91,8 +112,12 @@ if __name__ == '__main__':
     #shuffle
     in_dir = out_dir
     example_files = gfile.glob(in_dir)
-    out_dir = '/tmp/raw_record'
+    out_dir = '/tmp/raw_record_shuffle'
     shuffle_records(record_filenames=example_files,out_dir=out_dir,out_record_num=2)
+
+    #读取
+    in_dir = out_dir
+    read_data( gfile.glob(in_dir))
 ```
 
 
