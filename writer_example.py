@@ -75,8 +75,9 @@ def read_data(record_filenames,compression_type='GZIP'):
         seg_ids= example['seg_ids'].int64_list
         other = example['other'].bytes_list
         labels = example['labels'].bytes_list
-        print(input_ids[0])
-        print(other[0],other[1],labels[0])
+        print(input_ids.value[0])
+        print(other.value[0],other.value[1])
+        print(labels.value[0])
         break
 
 if __name__ == '__main__':
