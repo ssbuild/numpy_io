@@ -20,20 +20,21 @@ class TimeSpan:
         print(self.string,': ',(e - self.s),'second: ', (e - self.s).seconds,'\n')
 
 def write_records(data,out_dir,out_record_num,compression_type='GZIP'):
+    print('write_records record...')
     options = TFRecordOptions(compression_type=compression_type)
     # writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_file_num)]
     writers = [FeatrueWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_record_num)]
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
 
-    for i,id in enumerate(tqdm(shuffle_idx)):
+    for i,id in enumerate(tqdm(shuffle_idx,desc='write record')):
         example = data[id]
-        writer = writers[i % out_record_num]
-        writer.write(example)
+        writers[i % out_record_num].write(example)
     for writer in writers:
         writer.close()
 
 def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZIP'):
+    print('shuffle_records record...')
     time = TimeSpan()
     time.start('load RandomDataset')
     options = TFRecordOptions(compression_type=compression_type)
@@ -48,15 +49,15 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
     dataset_reader.close()
 
     shuffle_idx = list(range(data_size))
-    writers = [FeatrueWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options=options) for i in range(out_record_num)]
-    for i, id in enumerate(tqdm(shuffle_idx)):
+    writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options=options) for i in range(out_record_num)]
+    for i, id in enumerate(tqdm(shuffle_idx,desc='shuffle record')):
         example = all_example[id]
-        writer = writers[i % out_record_num]
-        writer.write(example)
+        writers[i % out_record_num].write(example)
     for writer in writers:
         writer.close()
 
 def read_data(record_filenames,compression_type='GZIP'):
+    print('read and parse record...')
     options = TFRecordOptions(compression_type=compression_type)
     dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
 
