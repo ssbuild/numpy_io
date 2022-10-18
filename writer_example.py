@@ -68,14 +68,13 @@ def read_data(record_filenames,compression_type='GZIP'):
         return feature
 
     dataset_reader = dataset_reader.apply(parse_fn)
-
-
     for example in dataset_reader:
         input_ids = example['input_ids'].int64_list
         seg_ids= example['seg_ids'].int64_list
         other = example['other'].bytes_list
         labels = example['labels'].bytes_list
-        print(input_ids.value[0])
+        print(input_ids.value)
+        print(seg_ids.value)
         print(other.value[0],other.value[1])
         print(labels.value[0])
         break
@@ -85,7 +84,7 @@ if __name__ == '__main__':
     node = {
         'input_ids': {
             'dtype': DataType.int64_list,
-            'data': np.random.randint(0, 21128, size=(512,)).tolist()
+            'data': np.random.randint(0, 21128, size=(512,),dtype=np.int32).tolist()
         },
         'seg_ids': {
             'dtype': DataType.int64_list,
