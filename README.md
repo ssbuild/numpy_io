@@ -4,7 +4,7 @@
 pip install -U fastdatasets
 
 
-## 2. 写大文件 shuffle 数据
+## 2. write records and shuffle records
 
 ```python
 import json
@@ -32,12 +32,12 @@ def write_records(data,out_dir,out_record_num,compression_type='GZIP'):
     print('write_records record...')
     options = TFRecordOptions(compression_type=compression_type)
     # writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_file_num)]
-    writers = [FeatrueWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_record_num)]
+    writers = [FeatrueWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
 
-    for i,id in enumerate(tqdm(shuffle_idx,desc='write record')):
-        example = data[id]
+    for i in tqdm(shuffle_idx,desc='write record'):
+        example = data[i]
         writers[i % out_record_num].write(example)
     for writer in writers:
         writer.close()
@@ -52,20 +52,20 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
     time.show()
 
     all_example = []
-    for i, id in enumerate(tqdm(range(data_size))):
-        serialized = dataset_reader[id]
+    for i in tqdm(range(data_size),desc='load records'):
+        serialized = dataset_reader[i]
         all_example.append(serialized)
     dataset_reader.close()
 
     shuffle_idx = list(range(data_size))
-    writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options=options) for i in range(out_record_num)]
-    for i, id in enumerate(tqdm(shuffle_idx,desc='shuffle record')):
-        example = all_example[id]
+    writers = [TFRecordWriter(os.path.join(out_dir, 'record_gzip_shuffle_{}.record'.format(i)), options=options) for i in range(out_record_num)]
+    for i in tqdm(shuffle_idx,desc='shuffle record'):
+        example = all_example[i]
         writers[i % out_record_num].write(example)
     for writer in writers:
         writer.close()
 
-def read_data(record_filenames,compression_type='GZIP'):
+def read_parse_records(record_filenames,compression_type='GZIP'):
     print('read and parse record...')
     options = TFRecordOptions(compression_type=compression_type)
     dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
@@ -117,22 +117,23 @@ if __name__ == '__main__':
     if not os.path.exists(out_dir):
         gfile.makedirs(out_dir)
     write_records(data,out_dir=out_dir,out_record_num=4)
-    #shuffle
-    in_dir = '/tmp/raw_record/record*gzip'
+
+    #shuffle records
+    in_dir = '/tmp/raw_record/record*record'
     example_files = gfile.glob(in_dir)
     out_dir = '/tmp/raw_record_shuffle'
     if not os.path.exists(out_dir):
         gfile.makedirs(out_dir)
     shuffle_records(record_filenames=example_files,out_dir=out_dir,out_record_num=2)
 
-    #读取
-    in_dir = '/tmp/raw_record_shuffle/record*gzip'
-    read_data( gfile.glob(in_dir))
+    #read and parse
+    in_dir = '/tmp/raw_record_shuffle/record*record'
+    read_parse_records( gfile.glob(in_dir))
 ```
 
 
 
-## 3. 读取大文件多文件records
+## 3. read records
 
 ```python
 from fastdatasets import TFRecordOptions,RecordLoader,FeatrueWriter,DataType,gfile
