@@ -84,7 +84,6 @@ def read_data(record_filenames,compression_type='GZIP'):
         break
 
 if __name__ == '__main__':
-
     labels = [0,0,0,1]
     node = {
         'input_ids': {
@@ -108,11 +107,15 @@ if __name__ == '__main__':
     data = [copy.deepcopy(node) for i in range(record_num)]
 
     out_dir = '/tmp/raw_record'
+    if not os.path.exists(out_dir):
+        gfile.makedirs(out_dir)
     write_records(data,out_dir=out_dir,out_record_num=4)
     #shuffle
     in_dir = out_dir
     example_files = gfile.glob(in_dir)
     out_dir = '/tmp/raw_record_shuffle'
+    if not os.path.exists(out_dir):
+        gfile.makedirs(out_dir)
     shuffle_records(record_filenames=example_files,out_dir=out_dir,out_record_num=2)
 
     #读取
