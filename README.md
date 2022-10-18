@@ -61,6 +61,32 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
         writer.write(example)
     for writer in writers:
         writer.close()
+
+if __name__ == '__main__':
+    node = {
+        'input_ids': {
+            'dtype': DataType.int64_list,
+            'data': np.random.randint(0, 21128, size=(512,))
+        },
+        'seg_ids': {
+            'dtype': DataType.int64_list,
+            'data': np.zeros(shape=(512,), dtype=np.int32)
+        },
+        'other': {
+            'dtype': DataType.bytes_list,
+            'data': [b'aaaa', b'bbbbbbbbbbbb']
+        },
+    }
+    record_num = 50000
+    data = [copy.deepcopy(node) for i in range(record_num)]
+
+    out_dir = '/tmp/raw_record'
+    write_records(data,out_dir=out_dir,out_record_num=4)
+    #shuffle
+    in_dir = out_dir
+    example_files = gfile.glob(in_dir)
+    out_dir = '/tmp/raw_record'
+    shuffle_records(record_filenames=example_files,out_dir=out_dir,out_record_num=2)
 ```
 
 

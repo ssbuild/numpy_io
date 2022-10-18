@@ -74,8 +74,6 @@ if __name__ == '__main__':
 
     out_dir = '/tmp/raw_record'
     write_records(data,out_dir=out_dir,out_record_num=4)
-
-
     #shuffle
     in_dir = out_dir
     example_files = gfile.glob(in_dir)
