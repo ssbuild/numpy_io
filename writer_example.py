@@ -1,3 +1,4 @@
+import json
 import os
 import random
 from tqdm import tqdm
@@ -55,10 +56,12 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
 
 
 if __name__ == '__main__':
+
+    labels = [0,0,0,1]
     node = {
         'input_ids': {
             'dtype': DataType.int64_list,
-            'data': np.random.randint(0, 21128, size=(512,))
+            'data': np.random.randint(0, 21128, size=(512,)).tolist()
         },
         'seg_ids': {
             'dtype': DataType.int64_list,
@@ -68,6 +71,10 @@ if __name__ == '__main__':
             'dtype': DataType.bytes_list,
             'data': [b'aaaa', b'bbbbbbbbbbbb']
         },
+        'labels': {
+            'dtype': DataType.bytes_list,
+            'data': [bytes(json.dumps(labels,ensure_ascii=True),encoding='utf-8')]
+        }
     }
     record_num = 50000
     data = [copy.deepcopy(node) for i in range(record_num)]
