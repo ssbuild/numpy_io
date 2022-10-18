@@ -19,4 +19,4 @@ def read_data2(record_filenames,compression_type='GZIP'):
     for i in range(example_size):
         example = dataset_reader[i]
         if i % 1000 == 0:
-            print(i)
+            print(example)
