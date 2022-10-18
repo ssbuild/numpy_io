@@ -83,7 +83,7 @@ if __name__ == '__main__':
         },
         'seg_ids': {
             'dtype': DataType.int64_list,
-            'data': np.zeros(shape=(512,), dtype=np.int32)
+            'data': np.zeros(shape=(512,), dtype=np.int32).tolist()
         },
         'other': {
             'dtype': DataType.bytes_list,
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         gfile.makedirs(out_dir)
     write_records(data,out_dir=out_dir,out_record_num=4)
     #shuffle
-    in_dir = out_dir
+    in_dir = '/tmp/raw_record/record*gzip'
     example_files = gfile.glob(in_dir)
     out_dir = '/tmp/raw_record_shuffle'
     if not os.path.exists(out_dir):
@@ -110,5 +110,5 @@ if __name__ == '__main__':
     shuffle_records(record_filenames=example_files,out_dir=out_dir,out_record_num=2)
 
     #读取
-    in_dir = out_dir
+    in_dir = '/tmp/raw_record_shuffle/record*gzip'
     read_data( gfile.glob(in_dir))
