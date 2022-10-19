@@ -79,12 +79,12 @@ def read_parse_records(record_filenames,compression_type='GZIP'):
         print(labels.value[0])
         break
 
-if __name__ == '__main__':
-    labels = [0,0,0,1]
-    node = {
+def get_data():
+    labels = [0, 0, 0, 1]
+    one_node = {
         'input_ids': {
             'dtype': DataType.int64_list,
-            'data': np.random.randint(0, 21128, size=(512,),dtype=np.int32).tolist()
+            'data': np.random.randint(0, 21128, size=(512,), dtype=np.int32).tolist()
         },
         'seg_ids': {
             'dtype': DataType.int64_list,
@@ -96,27 +96,30 @@ if __name__ == '__main__':
         },
         'labels': {
             'dtype': DataType.bytes_list,
-            'data': [bytes(json.dumps(labels,ensure_ascii=True),encoding='utf-8')]
+            'data': [bytes(json.dumps(labels, ensure_ascii=True), encoding='utf-8')]
         }
     }
 
     record_num = 50000
     print('gen {} data ....'.format(record_num))
-    data = [copy.deepcopy(node) for i in range(record_num)]
+    data = [copy.deepcopy(one_node) for i in range(record_num)]
+    return data
 
-    out_dir = '/tmp/raw_record'
-    if not os.path.exists(out_dir):
-        gfile.makedirs(out_dir)
-    write_records(data,out_dir=out_dir,out_record_num=4)
+if __name__ == '__main__':
+    data = get_data()
+    assert isinstance(data,list)
+    #records
+    record_dir = '/tmp/raw_record'
+    if not os.path.exists(record_dir):
+        gfile.makedirs(record_dir)
+    write_records(data,out_dir=record_dir,out_record_num=3)
 
     #shuffle records
-    in_dir = '/tmp/raw_record/record*record'
-    example_files = gfile.glob(in_dir)
-    out_dir = '/tmp/raw_record_shuffle'
-    if not os.path.exists(out_dir):
-        gfile.makedirs(out_dir)
-    shuffle_records(record_filenames=example_files,out_dir=out_dir,out_record_num=2)
+    example_files = gfile.glob(os.path.join(record_dir,'record*record'))
+    shuffle_record_dir = '/tmp/raw_record_shuffle'
+    if not os.path.exists(shuffle_record_dir):
+        gfile.makedirs(shuffle_record_dir)
+    shuffle_records(record_filenames=example_files,out_dir=shuffle_record_dir,out_record_num=2)
 
     #read and parse
-    in_dir = '/tmp/raw_record_shuffle/record*record'
-    read_parse_records( gfile.glob(in_dir))
+    read_parse_records(gfile.glob(os.path.join(shuffle_record_dir,'record*record')))
