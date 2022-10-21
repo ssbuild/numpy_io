@@ -6,7 +6,7 @@ import data_serialize
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from fastdatasets import TFRecordOptions,TFRecordWriter,RecordLoader,FeatrueWriter,DataType,gfile
+from fastdatasets import TFRecordOptions,TFRecordWriter,RecordLoader,FeatureWriter,DataType,gfile
 import copy
 
 class TimeSpan:
@@ -23,7 +23,7 @@ def write_records(data,out_dir,out_record_num,compression_type='GZIP'):
     print('write_records record...')
     options = TFRecordOptions(compression_type=compression_type)
     # writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_file_num)]
-    writers = [FeatrueWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
+    writers = [FeatureWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
 
