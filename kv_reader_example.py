@@ -6,7 +6,7 @@ from tqdm import tqdm
 from fastdatasets.writer.kv_writer import DBOptions, DBIterater, DBCompressionType, DB, KV_writer
 from fastdatasets import TableLoader
 
-db_path = 'd:\\example_table2'
+db_path = 'd:\\example_kv'
 
 def test_iterable(db_path):
     options = DBOptions(create_if_missing=False, error_if_exists=False)
