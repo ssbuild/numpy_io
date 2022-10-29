@@ -1,8 +1,15 @@
 # fastdatasets tfrecords examples
 
-## 1. install
+##  install
 pip install -U fastdatasets
 
+
+### 1.目录
+    kv_reader_example.py    键值 dataset 读
+    kv_writer_example.py    键值 dataset 写
+    
+    record_reader_example.py     record dataset 读
+    record_writer_example.py     record dataset 读
 
 ## 2. write records and shuffle records
 
@@ -15,7 +22,7 @@ import data_serialize
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from fastdatasets import TFRecordOptions,TFRecordWriter,RecordLoader,FeatrueWriter,DataType,gfile
+from fastdatasets import TFRecordOptions,TFRecordWriter,RecordLoader,FeatureWriter,DataType,gfile
 import copy
 
 class TimeSpan:
@@ -32,7 +39,7 @@ def write_records(data,out_dir,out_record_num,compression_type='GZIP'):
     print('write_records record...')
     options = TFRecordOptions(compression_type=compression_type)
     # writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_file_num)]
-    writers = [FeatrueWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
+    writers = [FeatureWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
 
@@ -139,7 +146,7 @@ if __name__ == '__main__':
 ## 3. read records
 
 ```python
-from fastdatasets import TFRecordOptions,RecordLoader,FeatrueWriter,DataType,gfile
+from fastdatasets import TFRecordOptions,RecordLoader,FeatureWriter,DataType,gfile
 def read_iterable(record_filenames,compression_type='GZIP'):
     options = TFRecordOptions(compression_type=compression_type)
     dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
@@ -172,4 +179,51 @@ def read_random(record_filenames,compression_type='GZIP'):
         if i % 1000 == 0:
             print(example)
         i += 1
+```
+
+## 4. kv dataset
+```python
+
+from tqdm import tqdm
+from fastdatasets.writer.kv_writer import DBOptions, DBIterater, DBCompressionType, DB, KV_writer
+from fastdatasets import TableLoader
+
+db_path = 'd:\\example_kv'
+def test_write(db_path):
+    options = DBOptions(create_if_missing=True, error_if_exists=False)
+    f = KV_writer(db_path, options=options)
+
+    n = 0
+    for i in range(30):
+        f.put('input{}'.format(i).encode(encoding='utf-8'), str(i))
+        f.put('label{}'.format(i).encode(), str(i))
+        n += 1
+    f.put('total_num', str(n))
+    f.close()
+
+def test_iterable(db_path):
+    options = DBOptions(create_if_missing=False, error_if_exists=False)
+    dataset = TableLoader.IterableDataset(db_path, options=options)
+    for d in dataset:
+        print(d)
+
+
+def test_random(db_path):
+    options = DBOptions(create_if_missing=False, error_if_exists=False)
+    dataset = TableLoader.RandomDataset(db_path,
+                                        data_key_prefix_list=('input', 'label'),
+                                        num_key='total_num',
+                                        options=options)
+
+    dataset = dataset.shuffle(10)
+    print(len(dataset))
+    for i in tqdm(range(len(dataset)), total=len(dataset)):
+        d = dataset[i]
+        print(i, d)
+
+
+test_write(db_path)
+test_iterable(db_path)
+test_random(db_path)
+
 ```

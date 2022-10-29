@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/10/18 9:36
 
-from fastdatasets import TFRecordOptions,RecordLoader,FeatrueWriter,DataType,gfile
+from fastdatasets import TFRecordOptions,RecordLoader,FeatureWriter,DataType,gfile
 def read_iterable(record_filenames,compression_type='GZIP'):
     options = TFRecordOptions(compression_type=compression_type)
     dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
