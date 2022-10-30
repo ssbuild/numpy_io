@@ -22,7 +22,9 @@ import data_serialize
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from fastdatasets import TFRecordOptions,TFRecordWriter,RecordLoader,FeatureWriter,DataType,gfile
+from fastdatasets.record_dataset import load_dataset,gfile,RECORD
+from fastdatasets.writer.record import *
+
 import copy
 
 class TimeSpan:
@@ -37,7 +39,7 @@ class TimeSpan:
 
 def write_records(data,out_dir,out_record_num,compression_type='GZIP'):
     print('write_records record...')
-    options = TFRecordOptions(compression_type=compression_type)
+    options = RECORD.TFRecordOptions(compression_type=compression_type)
     # writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_file_num)]
     writers = [FeatureWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
     shuffle_idx = list(range(len(data)))
@@ -54,7 +56,7 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
     time = TimeSpan()
     time.start('load RandomDataset')
     options = TFRecordOptions(compression_type=compression_type)
-    dataset_reader = RecordLoader.RandomDataset(record_filenames, options=options, with_share_memory=True)
+    dataset_reader = load_dataset.RandomDataset(record_filenames, options=options, with_share_memory=True)
     data_size = len(dataset_reader)
     time.show()
 
@@ -75,7 +77,7 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
 def read_parse_records(record_filenames,compression_type='GZIP'):
     print('read and parse record...')
     options = TFRecordOptions(compression_type=compression_type)
-    dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
+    dataset_reader = load_dataset.IterableDataset(record_filenames, options=options, with_share_memory=True)
 
     def parse_fn(x):
         example = data_serialize.Example()
@@ -146,10 +148,11 @@ if __name__ == '__main__':
 ## 3. read records
 
 ```python
-from fastdatasets import TFRecordOptions,RecordLoader,FeatureWriter,DataType,gfile
+from fastdatasets.record_dataset import load_dataset,gfile,RECORD
+from fastdatasets.writer.record import *
 def read_iterable(record_filenames,compression_type='GZIP'):
     options = TFRecordOptions(compression_type=compression_type)
-    dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
+    dataset_reader = load_dataset.IterableDataset(record_filenames, options=options, with_share_memory=True)
 
     i = 0
     for example in dataset_reader:
@@ -166,7 +169,7 @@ def read_iterable(record_filenames,compression_type='GZIP'):
 
 def read_random(record_filenames,compression_type='GZIP'):
     options = TFRecordOptions(compression_type=compression_type)
-    dataset_reader = RecordLoader.RandomDataset(record_filenames, options=options, with_share_memory=True)
+    dataset_reader = load_dataset.RandomDataset(record_filenames, options=options, with_share_memory=True)
     example_size = len(dataset_reader)
     for i in range(example_size):
         example = dataset_reader[i]
@@ -181,46 +184,109 @@ def read_random(record_filenames,compression_type='GZIP'):
         i += 1
 ```
 
-## 4. kv dataset
+## 4. leveldb dataset
 ```python
 
 from tqdm import tqdm
-from fastdatasets.writer.kv_writer import DBOptions, DBIterater, DBCompressionType, DB, KV_writer
-from fastdatasets import TableLoader
+from fastdatasets.writer.leveldb import LEVELDB_writer
+from fastdatasets.leveldb_dataset import LEVELDB,load_dataset
 
-db_path = 'd:\\example_kv'
+db_path = 'd:\\example_leveldb'
+
+
 def test_write(db_path):
-    options = DBOptions(create_if_missing=True, error_if_exists=False)
-    f = KV_writer(db_path, options=options)
-
+    options = LEVELDB.LeveldbOptions(create_if_missing=True,error_if_exists=False)
+    f = LEVELDB_writer(db_path, options = options)
+    
     n = 0
     for i in range(30):
         f.put('input{}'.format(i).encode(encoding='utf-8'), str(i))
         f.put('label{}'.format(i).encode(), str(i))
         n += 1
-    f.put('total_num', str(n))
+    f.put('total_num',str(n))
     f.close()
 
+
 def test_iterable(db_path):
-    options = DBOptions(create_if_missing=False, error_if_exists=False)
-    dataset = TableLoader.IterableDataset(db_path, options=options)
+    options = LEVELDB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
+    dataset = load_dataset.IterableDataset(db_path, options = options)
     for d in dataset:
         print(d)
 
-
 def test_random(db_path):
-    options = DBOptions(create_if_missing=False, error_if_exists=False)
-    dataset = TableLoader.RandomDataset(db_path,
-                                        data_key_prefix_list=('input', 'label'),
+    options = LEVELDB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
+    dataset = load_dataset.RandomDataset(db_path,
+                                        data_key_prefix_list=('input','label'),
                                         num_key='total_num',
-                                        options=options)
+                                        options = options)
 
     dataset = dataset.shuffle(10)
     print(len(dataset))
-    for i in tqdm(range(len(dataset)), total=len(dataset)):
+    for i in tqdm(range(len(dataset)),total=len(dataset)):
         d = dataset[i]
-        print(i, d)
+        print(i,d)
 
+test_write(db_path)
+test_iterable(db_path)
+test_random(db_path)
+
+```
+
+
+## 4. lmdb dataset
+```python
+
+from tqdm import tqdm
+from fastdatasets.writer.lmdb import LMDB_writer
+from fastdatasets.lmdb_dataset import LMDB,load_dataset
+
+db_path = 'd:\\example_lmdb_new2'
+
+
+def test_write(db_path):
+    options = LMDB.LmdbOptions(env_open_flag = 0,
+                env_open_mode = 0o664, # 8进制表示
+                txn_flag = 0,
+                dbi_flag = 0,
+                put_flag = 0)
+
+    f = LMDB_writer(db_path, options = options,map_size=1024 * 1024 * 1024)
+    
+    n = 0
+    for i in range(20):
+        f.put('input{}'.format(i).encode(encoding='utf-8'), str(i))
+        f.put('label{}'.format(i).encode(), str(i))
+        n += 1
+    f.put('total_num',str(n))
+    f.close()
+
+
+def test_iterable(db_path):
+    options = LMDB.LmdbOptions(env_open_flag=LMDB.LmdbFlag.MDB_RDONLY,
+                     env_open_mode=0o664,  # 8进制表示
+                     txn_flag=0,
+                     dbi_flag=0,
+                     put_flag=0)
+    dataset = load_dataset.IterableDataset(db_path,options = options)
+    for d in dataset:
+        print(d)
+
+def test_random(db_path):
+    options = LMDB.LmdbOptions(env_open_flag=LMDB.LmdbFlag.MDB_RDONLY,
+                               env_open_mode=0o664,  # 8进制表示
+                               txn_flag=0,
+                               dbi_flag=0,
+                               put_flag=0)
+    dataset = load_dataset.RandomDataset(db_path,
+                                        data_key_prefix_list=('input','label'),
+                                        num_key='total_num',
+                                        options = options)
+
+    dataset = dataset.shuffle(10)
+    print(len(dataset))
+    for i in tqdm(range(len(dataset)),total=len(dataset)):
+        d = dataset[i]
+        print(i,d)
 
 test_write(db_path)
 test_iterable(db_path)
