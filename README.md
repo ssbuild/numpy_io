@@ -1,15 +1,9 @@
 # fastdatasets tfrecords examples
 
-##  install
+##  1. install
 pip install -U fastdatasets
 
 
-### 1.目录
-    kv_reader_example.py    键值数据 dataset 读
-    kv_writer_example.py    键值数据 dataset 写
-    
-    record_reader_example.py     record dataset 读
-    record_writer_example.py     record dataset 写
 
 ## 2. write records and shuffle records
 
