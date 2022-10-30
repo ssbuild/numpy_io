@@ -163,14 +163,14 @@ def test_write(db_path):
     f.close()
 
 
-def test_iterable(db_path):
+def test_read_iterable(db_path):
     options = LEVELDB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
     dataset = Loader.IterableDataset(db_path, options=options)
     for d in dataset:
         print(d)
 
 
-def test_random(db_path):
+def test_read_random(db_path):
     options = LEVELDB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
     dataset = Loader.RandomDataset(db_path,
                                          data_key_prefix_list=('input', 'label'),
@@ -185,8 +185,8 @@ def test_random(db_path):
 
 
 test_write(db_path)
-test_iterable(db_path)
-test_random(db_path)
+test_read_iterable(db_path)
+test_read_random(db_path)
 
 ```
 
