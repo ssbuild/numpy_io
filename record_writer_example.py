@@ -6,7 +6,8 @@ import data_serialize
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from fastdatasets import TFRecordOptions,TFRecordWriter,RecordLoader,FeatureWriter,DataType,gfile
+from fastdatasets.record_dataset import load_dataset,gfile,RECORD
+from fastdatasets.writer.record import *
 import copy
 
 class TimeSpan:
@@ -21,7 +22,7 @@ class TimeSpan:
 
 def write_records(data,out_dir,out_record_num,compression_type='GZIP'):
     print('write_records record...')
-    options = TFRecordOptions(compression_type=compression_type)
+    options = RECORD.TFRecordOptions(compression_type=compression_type)
     # writers = [TFRecordWriter(os.path.join(out_dir, 'record_{}.gzip'.format(i)), options) for i in range(out_file_num)]
     writers = [FeatureWriter(os.path.join(out_dir, 'record_gzip_{}.record'.format(i)), options) for i in range(out_record_num)]
     shuffle_idx = list(range(len(data)))
@@ -37,8 +38,8 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
     print('shuffle_records record...')
     time = TimeSpan()
     time.start('load RandomDataset')
-    options = TFRecordOptions(compression_type=compression_type)
-    dataset_reader = RecordLoader.RandomDataset(record_filenames, options=options, with_share_memory=True)
+    options = RECORD.TFRecordOptions(compression_type=compression_type)
+    dataset_reader = load_dataset.RandomDataset(record_filenames, options=options, with_share_memory=True)
     data_size = len(dataset_reader)
     time.show()
 
@@ -58,8 +59,8 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
 
 def read_parse_records(record_filenames,compression_type='GZIP'):
     print('read and parse record...')
-    options = TFRecordOptions(compression_type=compression_type)
-    dataset_reader = RecordLoader.IterableDataset(record_filenames, options=options, with_share_memory=True)
+    options = RECORD.TFRecordOptions(compression_type=compression_type)
+    dataset_reader = load_dataset.IterableDataset(record_filenames, options=options, with_share_memory=True)
 
     def parse_fn(x):
         example = data_serialize.Example()
