@@ -19,8 +19,8 @@ def get_data():
     data = [copy.deepcopy(one_node) for i in range(num_gen)]
     return data
 
-def write_data(db_path,data,map_size=1024 * 1024 * 1024):
-
+def write_data(db_path,data,map_size=1024 * 1024 * 1024 * 20):
+    print('write_data...')
     options = DB.LmdbOptions(env_open_flag=0,
                                env_open_mode=0o664,  # 8进制表示
                                txn_flag=0,
@@ -54,6 +54,7 @@ def write_data(db_path,data,map_size=1024 * 1024 * 1024):
 
 
 def test_read_random(db_path):
+    print('load data...')
     options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY,
                              env_open_mode=0o664,  # 8进制表示
                              txn_flag=0,
@@ -74,8 +75,8 @@ def test_read_random(db_path):
 
         label= np.frombuffer(label,dtype=np.int32)
         label = label.reshape((4,))
-        print(image,label)
-        break
+        # print(image,label)
+        # break
 
 
 if __name__ == '__main__':

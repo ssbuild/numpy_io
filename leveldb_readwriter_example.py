@@ -19,7 +19,8 @@ def get_data():
     return data
 
 def write_data(db_path,data):
-    options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False)
+    print('write_data...')
+    options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False,write_buffer_size=1024 * 1024 * 512 )
     writer = BytesWriter(db_path, options=options)
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
@@ -44,6 +45,7 @@ def write_data(db_path,data):
     writer.close()
 
 def test_read_random(db_path):
+    print('load data...')
     options = DB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
     dataset = Loader.RandomDataset(db_path,
                                          data_key_prefix_list=('image','label'),
@@ -60,8 +62,8 @@ def test_read_random(db_path):
 
         label= np.frombuffer(label,dtype=np.int32)
         label = label.reshape((4,))
-        print(image,label)
-        break
+        # print(image,label)
+        # break
 
 
 if __name__ == '__main__':
