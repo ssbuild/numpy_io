@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/10/18 9:36
 
-from fastdatasets.record_dataset import load_dataset as Loader,gfile,RECORD
-from fastdatasets.writer.record import *
+from fastdatasets.record import load_dataset as Loader,gfile,RECORD
+
 def read_iterable(record_filenames,compression_type='GZIP'):
-    options = TFRecordOptions(compression_type=compression_type)
+    options = RECORD.TFRecordOptions(compression_type=compression_type)
     dataset_reader = Loader.IterableDataset(record_filenames, options=options, with_share_memory=True)
 
     i = 0
@@ -21,7 +21,7 @@ def read_iterable(record_filenames,compression_type='GZIP'):
         i += 1
 
 def read_random(record_filenames,compression_type='GZIP'):
-    options = TFRecordOptions(compression_type=compression_type)
+    options = RECORD.TFRecordOptions(compression_type=compression_type)
     dataset_reader = Loader.RandomDataset(record_filenames, options=options, with_share_memory=True)
     example_size = len(dataset_reader)
     for i in range(example_size):

@@ -1,43 +1,66 @@
+import random
 from tqdm import tqdm
-from fastdatasets.writer.leveldb import LEVELDB_writer
-from fastdatasets.leveldb_dataset import LEVELDB, load_dataset as Loader
+import numpy as np
+import json
+import copy
+from fastdatasets.leveldb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject
 
 db_path = 'd:\\example_leveldb'
 
-def test_write(db_path):
-    options = LEVELDB.LeveldbOptions(create_if_missing=True, error_if_exists=False)
-    f = LEVELDB_writer(db_path, options=options)
+def get_data():
+    labels = np.asarray([0, 0, 0, 1],dtype=np.int32)
+    one_node = {
+        'image':  np.random.randint(0,256,size=(128,128),dtype=np.int32).tobytes(),
+        'label': labels.tobytes()
+    }
+    num_gen = 100
+    print('gen {} data ....'.format(num_gen))
+    data = [copy.deepcopy(one_node) for i in range(num_gen)]
+    return data
+
+def write_data(db_path,data):
+    options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False)
+    writer = WriterObject(db_path, options=options)
+
+    shuffle_idx = list(range(len(data)))
+    random.shuffle(shuffle_idx)
 
     n = 0
-    for i in range(30):
-        f.put('input{}'.format(i).encode(), str(i))
-        f.put('label{}'.format(i).encode(), str(i))
+    for i in tqdm(shuffle_idx, desc='write record'):
+        example = data[i]
+        for key,value in example.items():
+            writer.put('{}{}'.format(key,i),value)
         n += 1
-    f.put('total_num', str(n))
-    f.close()
+
+    #
+    writer.file_writer.put('total_num', str(n))
+    writer.close()
 
 
-def test_read_iterable(db_path):
-    options = LEVELDB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
-    dataset = Loader.IterableDataset(db_path, options=options)
-    for d in dataset:
-        print(d)
 
 
 def test_read_random(db_path):
-    options = LEVELDB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
+    options = DB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
     dataset = Loader.RandomDataset(db_path,
-                                         data_key_prefix_list=('input', 'label'),
+                                         data_key_prefix_list=('image','label'),
                                          num_key='total_num',
                                          options=options)
 
-    dataset = dataset.shuffle(10)
+    dataset = dataset.shuffle(-1)
     print(len(dataset))
     for i in tqdm(range(len(dataset)), total=len(dataset)):
-        d = dataset[i]
-        print(i, d)
+        d : dict = dataset[i]
+        image,label = d.values()
+        image = np.frombuffer(image,dtype=np.int32)
+        image = image.reshape((128,128))
+
+        label= np.frombuffer(label,dtype=np.int32)
+        label = label.reshape((4,))
+        print(image,label)
+        break
 
 
-test_write(db_path)
-test_read_iterable(db_path)
-test_read_random(db_path)
+if __name__ == '__main__':
+    data = get_data()
+    write_data(db_path,data)
+    test_read_random(db_path)

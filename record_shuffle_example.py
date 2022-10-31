@@ -4,8 +4,8 @@ import os
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from fastdatasets.record_dataset import load_dataset as Loader,gfile,RECORD
-from fastdatasets.writer.record import *
+import data_serialize
+from fastdatasets.record import load_dataset as Loader,gfile,RECORD,DataType,WriterObject,FeatureWriter
 import copy
 
 class TimeSpan:
@@ -35,7 +35,7 @@ def shuffle_records(record_filenames,out_dir,out_record_num,compression_type='GZ
     dataset_reader.close()
 
     shuffle_idx = list(range(data_size))
-    writers = [TFRecordWriter(os.path.join(out_dir, 'record_gzip_shuffle_{}.record'.format(i)), options=options) for i in range(out_record_num)]
+    writers = [WriterObject(os.path.join(out_dir, 'record_gzip_shuffle_{}.record'.format(i)), options=options) for i in range(out_record_num)]
     for i in tqdm(shuffle_idx,desc='shuffle record'):
         example = all_example[i]
         writers[i % out_record_num].write(example)

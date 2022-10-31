@@ -6,8 +6,8 @@ import data_serialize
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from fastdatasets.record_dataset import load_dataset as Loader,gfile,RECORD
-from fastdatasets.writer.record import *
+from fastdatasets.record import load_dataset as Loader,gfile,RECORD,DataType,FeatureWriter
+
 import copy
 
 
@@ -70,9 +70,9 @@ def get_data():
         }
     }
 
-    record_num = 50000
-    print('gen {} data ....'.format(record_num))
-    data = [copy.deepcopy(one_node) for i in range(record_num)]
+    num_gen = 50000
+    print('gen {} data ....'.format(num_gen))
+    data = [copy.deepcopy(one_node) for i in range(num_gen)]
     return data
 
 if __name__ == '__main__':
