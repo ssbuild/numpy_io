@@ -9,6 +9,8 @@ from fastdatasets.record import load_dataset as Loader,gfile,RECORD,DataType,Wri
 import copy
 
 class TimeSpan:
+    def __init__(self,string=''):
+        self.start(string)
     def start(self,string):
         self.string = string
         self.s = datetime.now()
