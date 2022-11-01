@@ -163,7 +163,8 @@ def get_data():
     return data
 
 def write_data(db_path,data):
-    options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False)
+    print('write_data...')
+    options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False,write_buffer_size=1024 * 1024 * 512 )
     writer = BytesWriter(db_path, options=options)
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
@@ -188,6 +189,7 @@ def write_data(db_path,data):
     writer.close()
 
 def test_read_random(db_path):
+    print('load data...')
     options = DB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
     dataset = Loader.RandomDataset(db_path,
                                          data_key_prefix_list=('image','label'),
@@ -196,7 +198,7 @@ def test_read_random(db_path):
 
     dataset = dataset.shuffle(-1)
     print(len(dataset))
-    for i in tqdm(range(len(dataset)), total=len(dataset)):
+    for i in tqdm(range(len(dataset)), total=len(dataset),desc='read data'):
         d : dict = dataset[i]
         image,label = d.values()
         image = np.frombuffer(image,dtype=np.int32)
@@ -204,8 +206,8 @@ def test_read_random(db_path):
 
         label= np.frombuffer(label,dtype=np.int32)
         label = label.reshape((4,))
-        print(image,label)
-        break
+        # print(image,label)
+        # break
 
 
 if __name__ == '__main__':
@@ -218,7 +220,6 @@ if __name__ == '__main__':
 
 ## 4. lmdb dataset
 ```python
-
 import random
 from tqdm import tqdm
 import numpy as np
@@ -239,8 +240,8 @@ def get_data():
     data = [copy.deepcopy(one_node) for i in range(num_gen)]
     return data
 
-def write_data(db_path,data,map_size=1024 * 1024 * 1024):
-
+def write_data(db_path,data,map_size=1024 * 1024 * 1024 * 20):
+    print('write_data...')
     options = DB.LmdbOptions(env_open_flag=0,
                                env_open_mode=0o664,  # 8进制表示
                                txn_flag=0,
@@ -274,6 +275,7 @@ def write_data(db_path,data,map_size=1024 * 1024 * 1024):
 
 
 def test_read_random(db_path):
+    print('load data...')
     options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY,
                              env_open_mode=0o664,  # 8进制表示
                              txn_flag=0,
@@ -286,7 +288,7 @@ def test_read_random(db_path):
 
     dataset = dataset.shuffle(-1)
     print(len(dataset))
-    for i in tqdm(range(len(dataset)), total=len(dataset)):
+    for i in tqdm(range(len(dataset)), total=len(dataset),desc='read data'):
         d : dict = dataset[i]
         image,label = d.values()
         image = np.frombuffer(image,dtype=np.int32)
@@ -294,8 +296,8 @@ def test_read_random(db_path):
 
         label= np.frombuffer(label,dtype=np.int32)
         label = label.reshape((4,))
-        print(image,label)
-        break
+        # print(image,label)
+        # break
 
 
 if __name__ == '__main__':

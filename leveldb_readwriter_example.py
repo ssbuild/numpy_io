@@ -54,7 +54,7 @@ def test_read_random(db_path):
 
     dataset = dataset.shuffle(-1)
     print(len(dataset))
-    for i in tqdm(range(len(dataset)), total=len(dataset)):
+    for i in tqdm(range(len(dataset)), total=len(dataset),desc='read data'):
         d : dict = dataset[i]
         image,label = d.values()
         image = np.frombuffer(image,dtype=np.int32)
