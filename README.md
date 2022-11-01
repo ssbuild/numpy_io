@@ -3,8 +3,6 @@
 ##  1. install
 pip install -U fastdatasets
 
-
-
 ## 2. write records and shuffle records
 
 ```python
@@ -149,7 +147,7 @@ from tqdm import tqdm
 import numpy as np
 import json
 import copy
-from fastdatasets.leveldb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject
+from fastdatasets.leveldb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject,BytesWriter
 
 db_path = 'd:\\example_leveldb'
 
@@ -166,24 +164,28 @@ def get_data():
 
 def write_data(db_path,data):
     options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False)
-    writer = WriterObject(db_path, options=options)
-
+    writer = BytesWriter(db_path, options=options)
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
+    n = len(shuffle_idx)
 
-    n = 0
+    keys,values=[],[]
     for i in tqdm(shuffle_idx, desc='write record'):
         example = data[i]
         for key,value in example.items():
-            writer.put('{}{}'.format(key,i),value)
-        n += 1
+            keys.append('{}{}'.format(key,i))
+            values.append(value)
 
-    #
+        if (i + 1) % 100000 == 0:
+            writer.file_writer.put_batch(keys,values)
+            keys.clear()
+            values.clear()
+
+    if len(keys):
+        writer.file_writer.put_batch(keys, values)
+
     writer.file_writer.put('total_num', str(n))
     writer.close()
-
-
-
 
 def test_read_random(db_path):
     options = DB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
@@ -218,12 +220,11 @@ if __name__ == '__main__':
 ```python
 
 import random
-
 from tqdm import tqdm
 import numpy as np
 import json
 import copy
-from fastdatasets.lmdb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject
+from fastdatasets.lmdb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject,BytesWriter
 
 db_path = 'd:\\example_lmdb'
 
@@ -246,19 +247,28 @@ def write_data(db_path,data,map_size=1024 * 1024 * 1024):
                                dbi_flag=0,
                                put_flag=0)
 
-    writer = WriterObject(db_path, options=options,map_size=map_size)
+    writer = BytesWriter(db_path, options=options,map_size=map_size)
 
     shuffle_idx = list(range(len(data)))
     random.shuffle(shuffle_idx)
 
-    n = 0
+    n = len(shuffle_idx)
+    keys, values = [], []
     for i in tqdm(shuffle_idx, desc='write record'):
         example = data[i]
         for key, value in example.items():
-            writer.put('{}{}'.format(key, i), value)
-        n += 1
+            keys.append('{}{}'.format(key, i))
+            values.append(value)
 
-    #
+        if (i + 1) % 100000 == 0:
+            writer.file_writer.put_batch(keys, values)
+            keys.clear()
+            values.clear()
+
+
+    if len(keys):
+        writer.file_writer.put_batch(keys, values)
+
     writer.file_writer.put('total_num', str(n))
     writer.close()
 
