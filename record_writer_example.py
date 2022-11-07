@@ -48,7 +48,7 @@ def read_parse_records(record_filenames,compression_type='GZIP'):
         print(other.value[0],other.value[1])
         print(labels.value[0])
         break
-
+#兼容 tensorflow.data
 def get_data():
     labels = [0, 0, 0, 1]
     one_node = {

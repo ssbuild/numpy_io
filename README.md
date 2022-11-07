@@ -15,7 +15,6 @@ from tqdm import tqdm
 import numpy as np
 from datetime import datetime
 from fastdatasets.record import load_dataset as Loader,gfile,RECORD,DataType,FeatureWriter
-
 import copy
 
 
@@ -98,211 +97,122 @@ if __name__ == '__main__':
 
 
 
-## 3. read records
 
+## 3. leveldb dataset
 ```python
-# -*- coding: utf-8 -*-
-# @Time    : 2022/10/18 9:36
-
-from fastdatasets.record import load_dataset as Loader,gfile,RECORD
-
-def read_iterable(record_filenames,compression_type='GZIP'):
-    options = RECORD.TFRecordOptions(compression_type=compression_type)
-    dataset_reader = Loader.IterableDataset(record_filenames, options=options, with_share_memory=True)
-
-    i = 0
-    for example in dataset_reader:
-        if i % 1000 == 0:
-            print(example)
-        i += 1
-    # dataset 变换操作
-    dataset_reader = dataset_reader.apply(lambda x:x).repeat(2).shuffle(128)
-    i = 0
-    for example in dataset_reader:
-        if i % 1000 == 0:
-            print(example)
-        i += 1
-
-def read_random(record_filenames,compression_type='GZIP'):
-    options = RECORD.TFRecordOptions(compression_type=compression_type)
-    dataset_reader = Loader.RandomDataset(record_filenames, options=options, with_share_memory=True)
-    example_size = len(dataset_reader)
-    for i in range(example_size):
-        example = dataset_reader[i]
-        if i % 1000 == 0:
-            print(example)
-    # dataset 变换操作
-    dataset_reader = dataset_reader.apply(lambda x: x).repeat(2).shuffle(128)
-    i = 0
-    for example in dataset_reader:
-        if i % 1000 == 0:
-            print(example)
-        i += 1
-```
-
-## 4. leveldb dataset
-```python
-import random
-from tqdm import tqdm
+# @Time    : 2022/10/27 20:37
+# @Author  : tk
 import numpy as np
-import json
-import copy
-from fastdatasets.leveldb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject,BytesWriter
+from tqdm import tqdm
+from fastdatasets.leveldb import DB,load_dataset,WriterObject,DataType,StringWriter,JsonWriter,FeatureWriter,NumpyWriter
 
-db_path = 'd:\\example_leveldb'
+db_path = 'd:\\example_leveldb_numpy'
 
-def get_data():
-    labels = np.asarray([0, 0, 0, 1],dtype=np.int32)
-    one_node = {
-        'image':  np.random.randint(0,256,size=(128,128),dtype=np.int32).tobytes(),
-        'label': labels.tobytes()
-    }
-    num_gen = 100
-    print('gen {} data ....'.format(num_gen))
-    data = [copy.deepcopy(one_node) for i in range(num_gen)]
-    return data
-
-def write_data(db_path,data):
-    print('write_data...')
-    options = DB.LeveldbOptions(create_if_missing=True, error_if_exists=False,write_buffer_size=1024 * 1024 * 512 )
-    writer = BytesWriter(db_path, options=options)
-    shuffle_idx = list(range(len(data)))
-    random.shuffle(shuffle_idx)
-    n = len(shuffle_idx)
-
-    keys,values=[],[]
-    for i in tqdm(shuffle_idx, desc='write record'):
-        example = data[i]
-        for key,value in example.items():
-            keys.append('{}{}'.format(key,i))
-            values.append(value)
-
-        if (i + 1) % 100000 == 0:
-            writer.file_writer.put_batch(keys,values)
+def test_write(db_path):
+    options = DB.LeveldbOptions(create_if_missing=True,error_if_exists=False)
+    f = NumpyWriter(db_path, options = options)
+    keys,values = [],[]
+    n = 30
+    for i in range(n):
+        train_node = {
+            "index":np.asarray(i,dtype=np.int64),
+            'image': np.random.rand(3,4),
+            'labels': np.random.randint(0,21128,size=(10),dtype=np.int64),
+            'bdata': np.asarray(b'11111111asdadasdasdaa')
+        }
+        keys.append('input{}'.format(i))
+        values.append(train_node)
+        if (i+1) % 10000 == 0:
+            f.put_batch(keys,values)
             keys.clear()
             values.clear()
-
     if len(keys):
-        writer.file_writer.put_batch(keys, values)
+        f.put_batch(keys, values)
 
-    writer.file_writer.put('total_num', str(n))
-    writer.close()
+    f.file_writer.put('total_num',str(n))
+    f.close()
 
-def test_read_random(db_path):
-    print('load data...')
+
+
+def test_random(db_path):
     options = DB.LeveldbOptions(create_if_missing=False, error_if_exists=False)
-    dataset = Loader.RandomDataset(db_path,
-                                         data_key_prefix_list=('image','label'),
-                                         num_key='total_num',
-                                         options=options)
+    dataset = load_dataset.RandomDataset(db_path,
+                                        data_key_prefix_list=('input',),
+                                        num_key='total_num',
+                                        options = options)
 
-    dataset = dataset.shuffle(-1)
+    dataset = dataset.parse_from_numpy_writer().shuffle(10)
     print(len(dataset))
-    for i in tqdm(range(len(dataset)), total=len(dataset),desc='read data'):
-        d : dict = dataset[i]
-        image,label = d.values()
-        image = np.frombuffer(image,dtype=np.int32)
-        image = image.reshape((128,128))
+    for i in tqdm(range(len(dataset)),total=len(dataset)):
+        d = dataset[i]
+        print(i,d)
 
-        label= np.frombuffer(label,dtype=np.int32)
-        label = label.reshape((4,))
-        # print(image,label)
-        # break
-
-
-if __name__ == '__main__':
-    data = get_data()
-    write_data(db_path,data)
-    test_read_random(db_path)
+test_write(db_path)
+test_random(db_path)
 
 ```
 
 
 ## 4. lmdb dataset
 ```python
-import random
-from tqdm import tqdm
+# @Time    : 2022/10/27 20:37
+# @Author  : tk
+
 import numpy as np
-import json
-import copy
-from fastdatasets.lmdb import DB,load_dataset as Loader, DataType,FeatureWriter,WriterObject,BytesWriter
+from tqdm import tqdm
+from fastdatasets.lmdb import DB,load_dataset,WriterObject,DataType,StringWriter,JsonWriter,FeatureWriter,NumpyWriter
 
-db_path = 'd:\\example_lmdb'
+db_path = 'd:\\example_lmdb_numpy'
 
-def get_data():
-    labels = np.asarray([0, 0, 0, 1],dtype=np.int32)
-    one_node = {
-        'image':  np.random.randint(0,256,size=(128,128),dtype=np.int32).tobytes(),
-        'label': labels.tobytes()
-    }
-    num_gen = 100
-    print('gen {} data ....'.format(num_gen))
-    data = [copy.deepcopy(one_node) for i in range(num_gen)]
-    return data
+def test_write(db_path):
+    options = DB.LmdbOptions(env_open_flag = 0,
+                env_open_mode = 0o664, # 8进制表示
+                txn_flag = 0,
+                dbi_flag = 0,
+                put_flag = 0)
 
-def write_data(db_path,data,map_size=1024 * 1024 * 1024 * 20):
-    print('write_data...')
-    options = DB.LmdbOptions(env_open_flag=0,
+    f = NumpyWriter(db_path, options = options,map_size=1024 * 1024 * 1024)
+
+    keys, values = [], []
+    n = 30
+    for i in range(n):
+        train_node = {
+            'image': np.random.rand(3, 4),
+            'labels': np.random.randint(0, 21128, size=(10), dtype=np.int64),
+            'bdata': np.asarray(b'11111111asdadasdasdaa')
+        }
+        keys.append('input{}'.format(i))
+        values.append(train_node)
+        if (i + 1) % 10000 == 0:
+            f.put_batch(keys, values)
+            keys.clear()
+            values.clear()
+    if len(keys):
+        f.put_batch(keys, values)
+
+    f.file_writer.put('total_num', str(n))
+    f.close()
+
+
+
+def test_random(db_path):
+    options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY,
                                env_open_mode=0o664,  # 8进制表示
                                txn_flag=0,
                                dbi_flag=0,
                                put_flag=0)
+    dataset = load_dataset.RandomDataset(db_path,
+                                        data_key_prefix_list=('input',),
+                                        num_key='total_num',
+                                        options = options)
 
-    writer = BytesWriter(db_path, options=options,map_size=map_size)
-
-    shuffle_idx = list(range(len(data)))
-    random.shuffle(shuffle_idx)
-
-    n = len(shuffle_idx)
-    keys, values = [], []
-    for i in tqdm(shuffle_idx, desc='write record'):
-        example = data[i]
-        for key, value in example.items():
-            keys.append('{}{}'.format(key, i))
-            values.append(value)
-
-        if (i + 1) % 100000 == 0:
-            writer.file_writer.put_batch(keys, values)
-            keys.clear()
-            values.clear()
-
-
-    if len(keys):
-        writer.file_writer.put_batch(keys, values)
-
-    writer.file_writer.put('total_num', str(n))
-    writer.close()
-
-
-def test_read_random(db_path):
-    print('load data...')
-    options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY,
-                             env_open_mode=0o664,  # 8进制表示
-                             txn_flag=0,
-                             dbi_flag=0,
-                             put_flag=0)
-    dataset = Loader.RandomDataset(db_path,
-                                         data_key_prefix_list=('image','label'),
-                                         num_key='total_num',
-                                         options=options)
-
-    dataset = dataset.shuffle(-1)
+    dataset = dataset.parse_from_numpy_writer().shuffle(10)
     print(len(dataset))
-    for i in tqdm(range(len(dataset)), total=len(dataset),desc='read data'):
-        d : dict = dataset[i]
-        image,label = d.values()
-        image = np.frombuffer(image,dtype=np.int32)
-        image = image.reshape((128,128))
+    for i in tqdm(range(len(dataset)), total=len(dataset)):
+        d = dataset[i]
+        print(d)
 
-        label= np.frombuffer(label,dtype=np.int32)
-        label = label.reshape((4,))
-        # print(image,label)
-        # break
-
-
-if __name__ == '__main__':
-    data = get_data()
-    write_data(db_path,data)
-    test_read_random(db_path)
+test_write(db_path)
+test_random(db_path)
 
 ```

@@ -57,14 +57,15 @@ def read_parse_records(record_filenames,compression_type='GZIP'):
 
     dataset_reader = dataset_reader.apply(parse_fn)
     for example in dataset_reader:
-        input_ids = example['input_ids'].int64_list
-        seg_ids= example['seg_ids'].int64_list
-        other = example['other'].bytes_list
-        labels = example['labels'].bytes_list
-        print(input_ids.value)
-        print(seg_ids.value)
-        print(other.value[0],other.value[1])
-        print(labels.value[0])
+        print(example)
+        # input_ids = example['input_ids'].int64_list
+        # seg_ids= example['seg_ids'].int64_list
+        # other = example['other'].bytes_list
+        # labels = example['labels'].bytes_list
+        # print(input_ids.value)
+        # print(seg_ids.value)
+        # print(other.value[0],other.value[1])
+        # print(labels.value[0])
         break
 
 
