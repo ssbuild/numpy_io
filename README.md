@@ -3,7 +3,13 @@
 ##   install
 pip install -U fastdatasets
 
+
 ```text
+support backend as flow
+tfrecord:  support compression
+leveldb: support compression
+lmdb: doe not support compression
+
 easy method
     record_numpywriter_example.py
     lmdb_readwriter_example.py
