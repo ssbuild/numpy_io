@@ -37,7 +37,7 @@ class Parallel_workers(C_parallel_node):
 
         elif self.backend == E_file_backend.leveldb:
             self.batch_count = 100000
-            self.f_writer = leveldb_writer.NumpyWriter(filename, options=LEVELDB.LeveldbOptions(create_if_missing=False,
+            self.f_writer = leveldb_writer.NumpyWriter(filename, options=LEVELDB.LeveldbOptions(create_if_missing=True,
                                                                                                   error_if_exists=False,
                                                                                                   write_buffer_size=1024 * 1024 * 512))
         elif self.backend == E_file_backend.lmdb:
@@ -119,7 +119,7 @@ class DataHelper:
             dataset = leveldb_loader.RandomDataset(filename,
                                                    data_key_prefix_list=('input',),
                                                    num_key='total_num',
-                                                   options=LEVELDB.LeveldbOptions(create_if_missing=True,error_if_exists=False))
+                                                   options=LEVELDB.LeveldbOptions(create_if_missing=False,error_if_exists=False))
         elif self.backend == E_file_backend.lmdb:
             dataset = lmdb_loader.RandomDataset(filename,
                                                 data_key_prefix_list=('input',),
