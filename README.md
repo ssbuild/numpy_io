@@ -21,7 +21,7 @@ complex method and this method is compatible with tensorflow.datasets
     record_reader_example.py
 ```
 
-## 1. unity writers
+## 1. tfrecord,leveldb,lmdb writers
 ```python
 # @Time    : 2022/11/6 10:40
 import typing
@@ -37,7 +37,6 @@ class E_file_backend(Enum):
     record = 0
     leveldb = 1
     lmdb = 2
-
     @staticmethod
     def from_string(b: str):
         b = b.lower()
@@ -112,8 +111,9 @@ class Parallel_workers(C_parallel_node):
 
 
 class DataWriteHelper:
-    def __init__(self,backend='record',num_writer_worker=8,max_seq_length=512):
+    def __init__(self,save_fn_args: tuple,backend='record',num_writer_worker=8,max_seq_length=512):
         assert backend in ['record', 'lmdb', 'leveldb']
+        self.save_fn_args = save_fn_args
         self._backend_type = backend
         self._backend = E_file_backend.from_string(backend)
         self.num_writer_worker = num_writer_worker
@@ -137,15 +137,15 @@ class DataWriteHelper:
         self._backend_type = value
 
     # 多进程写大文件
-    def save(self, cache_file: str, data: list, tokenizer: BertTokenizer):
-        user_data = (tokenizer,)
+    def save(self, cache_file: str, data: list):
+        user_data = (self.save_fn_args,) if not isinstance(self.save_fn_args,tuple) else self.save_fn_args
         worker_node = Parallel_workers(cache_file,self.backend,self.tokenize_data,user_data,num_process_worker=self.num_writer_worker)
         parallel_apply(data, worker_node)
 
     #切分词
-    def tokenize_data(self,data_index: int, data: typing.Any,user_data: typing.Any):
+    def tokenize_data(self,data_index: int, data: typing.Any,user_data: tuple):
         tokenizer: BertTokenizer
-        tokenizer = user_data[0] if isinstance(user_data,tuple) else user_data
+        tokenizer = user_data[0]
         max_seq_length = self.max_seq_length
         x = data
         if isinstance(x, tuple):
@@ -223,32 +223,32 @@ class DataReadLoader:
         return d
 
 def make_dataset(tokenizer,outputfile,data_backend):
-    dataHelper = DataWriteHelper(backend=data_backend, num_writer_worker=8, max_seq_length=64)
+    dataHelper = DataWriteHelper(save_fn_args=(tokenizer,),backend=data_backend, num_writer_worker=8, max_seq_length=64)
     # filename = './data.txt'
     # data = dataHelper.read_from_file(filename)
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
-    dataHelper.save(outputfile, data, tokenizer)
+    dataHelper.save(outputfile, data)
 
-if __name__ == '__main__':
-    data_backend = 'record'
-    outputfile = './data.record'
-    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
 
-    make_dataset(tokenizer,outputfile,data_backend)
+def test(tokenizer,data_backend,outputfile):
 
-    dataset = DataReadLoader.load(outputfile,data_backend)
-    try:
-        length = len(dataset)
-    except:
-        length = None
+    make_dataset(tokenizer, outputfile, data_backend)
+    dataset = DataReadLoader.load(outputfile, data_backend)
 
-    if length is None:
+    if isinstance(dataset, typing.Iterator):
         for d in dataset:
             print(d)
             break
     else:
-        for i in range(length):
+        for i in range(len(dataset)):
             print(dataset[i])
+            break
+        print('total count', len(dataset))
+if __name__ == '__main__':
+    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+    test(tokenizer,'record','./data.record')
+    test(tokenizer,'leveldb', './data.leveldb')
+    test(tokenizer,'lmdb', './data.lmdb')
 
 ```
 
