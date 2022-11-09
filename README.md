@@ -171,17 +171,7 @@ class DataWriteHelper:
             'token_type_ids':token_type_ids,
             'seqlen': input_length
         }
-
         return node
-    #读取文件
-    def read_from_file(self, filename):
-        D = []
-        with open(filename,'r',encoding='utf-8') as f:
-            lines = f.readlines()
-            for line in lines:
-                line = line.replace('\r\n','').replace('\n')
-                D.append(line)
-        return D
 
 
 
@@ -221,20 +211,28 @@ class DataReadLoader:
         for k in x:
             d[k] = np.asarray(x[k])
         return d
+    # 读取文件
+    @staticmethod
+    def read_from_file(filename):
+        D = []
+        with open(filename, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.replace('\r\n', '').replace('\n')
+                D.append(line)
+        return D
 
 def make_dataset(tokenizer,outputfile,data_backend):
     dataHelper = DataWriteHelper(save_fn_args=(tokenizer,),backend=data_backend, num_writer_worker=8, max_seq_length=64)
     # filename = './data.txt'
-    # data = dataHelper.read_from_file(filename)
+    # data = DataReadLoader.read_from_file(filename)
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
     dataHelper.save(outputfile, data)
 
 
 def test(tokenizer,data_backend,outputfile):
-
     make_dataset(tokenizer, outputfile, data_backend)
     dataset = DataReadLoader.load(outputfile, data_backend)
-
     if isinstance(dataset, typing.Iterator):
         for d in dataset:
             print(d)
