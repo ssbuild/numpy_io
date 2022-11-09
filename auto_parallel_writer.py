@@ -131,14 +131,13 @@ class DataWriteHelper:
         max_seq_length = self.max_seq_length
         x = data
         if isinstance(x, tuple):
-            o = tokenizer(text=x[0], text_pair=x[1], max_length=max_seq_length, truncation=True,
-                          add_special_tokens=True)
+            o = tokenizer.encode_plus(text=x[0], text_pair=x[1], max_length=max_seq_length, truncation=True,add_special_tokens=True)
         else:
-            o = tokenizer(x, max_length=max_seq_length, truncation=True, add_special_tokens=True, )
+            o = tokenizer.encode_plus(x, max_length=max_seq_length, truncation=True, add_special_tokens=True, )
 
-        input_ids = o['input_ids']
-        attention_mask = o['attention_mask']
-        token_type_ids = o['token_type_ids']
+        input_ids = np.asarray(o['input_ids'],dtype=np.int64)
+        attention_mask = np.asarray(o['attention_mask'],dtype=np.int64)
+        token_type_ids = np.asarray(o['token_type_ids'],dtype=np.int64)
 
         input_length = np.asarray(len(input_ids), dtype=np.int64)
         pad_len = self.max_seq_length - input_length
