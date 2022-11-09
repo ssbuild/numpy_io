@@ -62,7 +62,7 @@ class Parallel_workers(C_parallel_node):
 
         elif self.backend == E_file_backend.leveldb:
             self.batch_count = 100000
-            self.f_writer = leveldb_writer.NumpyWriter(filename, options=LEVELDB.LeveldbOptions(create_if_missing=False,
+            self.f_writer = leveldb_writer.NumpyWriter(filename, options=LEVELDB.LeveldbOptions(create_if_missing=True,
                                                                                                   error_if_exists=False,
                                                                                                   write_buffer_size=1024 * 1024 * 512))
         elif self.backend == E_file_backend.lmdb:
@@ -111,7 +111,7 @@ class Parallel_workers(C_parallel_node):
 
 
 
-class DataHelper:
+class DataWriteHelper:
     def __init__(self,backend='record',num_writer_worker=8,max_seq_length=512):
         assert backend in ['record', 'lmdb', 'leveldb']
         self._backend_type = backend
@@ -136,30 +136,6 @@ class DataHelper:
     def backend_type(self, value):
         self._backend_type = value
 
-    def load(self,filename: typing.Union[typing.List[str],str]):
-        if self.backend == E_file_backend.record:
-            dataset = record_loader.IterableDataset(filename,
-                                                    options=RECORD.TFRecordOptions(compression_type='GZIP'))
-        elif self.backend == E_file_backend.leveldb:
-            dataset = leveldb_loader.RandomDataset(filename,
-                                                   data_key_prefix_list=('input',),
-                                                   num_key='total_num',
-                                                   options=LEVELDB.LeveldbOptions(create_if_missing=True,error_if_exists=False))
-        elif self.backend == E_file_backend.lmdb:
-            dataset = lmdb_loader.RandomDataset(filename,
-                                                data_key_prefix_list=('input',),
-                                                num_key='total_num',
-                                                options=LMDB.LmdbOptions(env_open_flag =LMDB.LmdbFlag.MDB_RDONLY,
-                                                                            env_open_mode = 0o664, # 8进制表示
-                                                                            txn_flag = 0,
-                                                                            dbi_flag = 0,
-                                                                            put_flag = 0),
-               )
-        else:
-            dataset = None
-
-        dataset = dataset.parse_from_numpy_writer().apply(self.dataset_hook)
-        return dataset
     # 多进程写大文件
     def save(self, cache_file: str, data: list, tokenizer: BertTokenizer):
         user_data = (tokenizer,)
@@ -181,11 +157,21 @@ class DataHelper:
         input_ids = o['input_ids']
         attention_mask = o['attention_mask']
         token_type_ids = o['token_type_ids']
+
+        input_length = np.asarray(len(input_ids), dtype=np.int64)
+        pad_len = self.max_seq_length - input_length
+        if pad_len > 0:
+            pad_val = tokenizer.pad_token_id
+            input_ids = np.pad(input_ids, (0, pad_len), 'constant', constant_values=(pad_val, pad_val))
+            attention_mask = np.pad(attention_mask, (0, pad_len), 'constant', constant_values=(pad_val, pad_val))
+            token_type_ids = np.pad(token_type_ids, (0, pad_len), 'constant', constant_values=(pad_val, pad_val))
         node = {
-            'input_ids': np.asarray(input_ids, dtype=np.int64),
-            'attention_mask': np.asarray(attention_mask, dtype=np.int64),
-            'token_type_ids': np.asarray(token_type_ids, dtype=np.int64),
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'token_type_ids':token_type_ids,
+            'seqlen': input_length
         }
+
         return node
     #读取文件
     def read_from_file(self, filename):
@@ -197,36 +183,60 @@ class DataHelper:
                 D.append(line)
         return D
 
-    def dataset_hook(self, x: dict):
-        input_ids = x['input_ids']
-        attention_mask = x['attention_mask']
-        token_type_ids = x['token_type_ids']
 
-        input_len = np.asarray([len(input_ids)], dtype=np.int64)
-        pad_len = self.max_seq_length - len(input_ids)
-        if pad_len > 0:
-            input_ids = np.pad(input_ids, (0, pad_len), 'constant', constant_values=(0, 0))
-            attention_mask = np.pad(attention_mask, (0, pad_len), 'constant', constant_values=(0, 0))
-            token_type_ids = np.pad(token_type_ids, (0, pad_len), 'constant', constant_values=(0, 0))
 
-        d = {
-            'input_ids': input_ids,
-            'attention_mask': attention_mask,
-            'token_type_ids': token_type_ids,
-            'labels': input_ids,
-            'input_len': input_len
-        }
+class DataReadLoader:
+    @staticmethod
+    def load(filename: typing.Union[typing.List[str], str],backend: str):
+        backend = E_file_backend.from_string(backend)
+        if backend == E_file_backend.record:
+            dataset = record_loader.IterableDataset(filename,
+                                                    options=RECORD.TFRecordOptions(compression_type='GZIP'))
+        elif backend == E_file_backend.leveldb:
+            dataset = leveldb_loader.RandomDataset(filename,
+                                                   data_key_prefix_list=('input',),
+                                                   num_key='total_num',
+                                                   options=LEVELDB.LeveldbOptions(create_if_missing=True,
+                                                                                  error_if_exists=False))
+        elif backend == E_file_backend.lmdb:
+            dataset = lmdb_loader.RandomDataset(filename,
+                                                data_key_prefix_list=('input',),
+                                                num_key='total_num',
+                                                options=LMDB.LmdbOptions(env_open_flag=LMDB.LmdbFlag.MDB_RDONLY,
+                                                                         env_open_mode=0o664,  # 8进制表示
+                                                                         txn_flag=0,
+                                                                         dbi_flag=0,
+                                                                         put_flag=0),
+                                                )
+        else:
+            dataset = None
+
+        dataset = dataset.parse_from_numpy_writer().apply(DataReadLoader.dataset_hook)
+        return dataset
+
+    # 读取数据对齐 max_seq_length
+    @staticmethod
+    def dataset_hook(x: dict):
+        d = {}
+        for k in x:
+            d[k] = np.asarray(x[k])
         return d
 
-if __name__ == '__main__':
-    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-    dataHelper = DataHelper(backend='record',num_writer_worker=8,max_seq_length=64)
+def make_dataset(tokenizer,outputfile,data_backend):
+    dataHelper = DataWriteHelper(backend=data_backend, num_writer_worker=8, max_seq_length=64)
     # filename = './data.txt'
     # data = dataHelper.read_from_file(filename)
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
-    train_file = './data.record'
-    dataHelper.save(train_file,data,tokenizer)
-    dataset = dataHelper.load(train_file)
+    dataHelper.save(outputfile, data, tokenizer)
+
+if __name__ == '__main__':
+    data_backend = 'record'
+    outputfile = './data.record'
+    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+
+    make_dataset(tokenizer,outputfile,data_backend)
+
+    dataset = DataReadLoader.load(outputfile,data_backend)
     try:
         length = len(dataset)
     except:
