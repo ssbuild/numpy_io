@@ -55,7 +55,6 @@ class Parallel_workers(C_parallel_node):
         self.user_data = user_data
 
     def write_batch_data(self):
-        self.total_num += len(self.batch_values)
         if self.backend == E_file_backend.record:
             self.f_writer.write_batch(self.batch_values)
         elif self.backend == E_file_backend.leveldb or self.backend == E_file_backend.lmdb:
@@ -69,8 +68,16 @@ class Parallel_workers(C_parallel_node):
 
     # 继承
     def on_output_process(self, index, x):
-        self.batch_keys.append('input{}'.format(index))
-        self.batch_values.append(x)
+        if isinstance(x, (list, tuple)):
+            for one in x:
+                self.batch_keys.append('input{}'.format(self.total_num))
+                self.batch_values.append(one)
+                self.total_num += 1
+        # 返回一个结果
+        else:
+            self.batch_keys.append('input{}'.format(self.total_num))
+            self.batch_values.append(x)
+            self.total_num += 1
         if len(self.batch_values) % self.batch_count == 0:
             self.write_batch_data()
 
