@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/11/10 10:35
 import typing
-
 import numpy as np
+from tqdm import tqdm
 from transformers import BertTokenizer
 from fastdatasets.utils.NumpyAdapter import NumpyWriterAdapter,NumpyReaderAdapter
 
@@ -34,7 +34,7 @@ def convert2feature(tokenizer:BertTokenizer,data,max_seq_length):
 def make_dataset(data,data_backend,outfile):
     numpy_writer = NumpyWriterAdapter(outfile,data_backend)
     batch_keys,batch_values = [],[]
-    for i,d in enumerate(data):
+    for i,d in enumerate(tqdm(data,total=len(data))):
         batch_keys.append('input{}'.format(i))
         batch_values.append(d)
         if (i +1 ) % numpy_writer.advice_batch_buffer_size == 0:
