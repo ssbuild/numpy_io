@@ -15,6 +15,7 @@ pip install -U fastdatasets
 ## 1. 示例
 
 目前支持加载的权重：
+- <strong>auto_writer</strong>  封装 tfrecord leveldb lmdb , 普通读写
 - <strong>auto_parallel_writer</strong>  封装 tfrecord leveldb lmdb , 适配并行读写
 - <strong>record_numpywriter_example</strong>  numpy writer for tfrecord
 - <strong>leveldb_readwriter_example</strong>  numpy writer for leveldb

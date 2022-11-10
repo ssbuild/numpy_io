@@ -36,18 +36,16 @@ def tokenize_data(data_index: int, data: typing.Any, user_data: tuple):
     return node
 
 
-def make_dataset(tokenizer,outputfile,data_backend):
+def make_dataset(tokenizer,data,data_backend,outputfile):
     parallel_writer = ParallelNumpyWriter(num_process_worker=8)
     parallel_writer.initailize_input_hook(tokenize_data, (tokenizer,64))
     parallel_writer.initialize_writer(outputfile,data_backend)
-    # filename = './data.txt'
-    # data = DataReadLoader.read_from_file(filename)
-    data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
+
     parallel_writer.parallel_apply(data)
 
 
-def test(tokenizer,data_backend,outputfile):
-    make_dataset(tokenizer, outputfile, data_backend)
+def test(tokenizer,data,data_backend,outputfile):
+    make_dataset(tokenizer,data,data_backend,outputfile)
     dataset = NumpyReaderAdapter.load(outputfile, data_backend)
     if isinstance(dataset, typing.Iterator):
         for d in dataset:
@@ -60,6 +58,10 @@ def test(tokenizer,data_backend,outputfile):
         print('total count', len(dataset))
 if __name__ == '__main__':
     tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-    test(tokenizer,'record','./data.record')
-    test(tokenizer,'leveldb', './data.leveldb')
-    test(tokenizer,'lmdb', './data.lmdb')
+    # filename = './data.txt'
+    # data = DataReadLoader.read_from_file(filename)
+    data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
+
+    test(tokenizer,data,'record','./data.record')
+    test(tokenizer,data,'leveldb', './data.leveldb')
+    test(tokenizer,data,'lmdb', './data.lmdb')
