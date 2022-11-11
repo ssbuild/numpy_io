@@ -63,7 +63,8 @@ if __name__ == '__main__':
     # data = DataReadLoader.read_from_file(filename)
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
 
-    test(tokenizer,data, 'memory', './data.record')
+    test(tokenizer,data, 'memory_raw', '')
+    test(tokenizer,data, 'memory', '')
     test(tokenizer,data,'record','./data.record')
     test(tokenizer,data,'leveldb', './data.leveldb')
     test(tokenizer,data,'lmdb', './data.lmdb')

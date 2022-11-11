@@ -58,7 +58,7 @@ def make_dataset(data,data_backend,outfile):
     numpy_writer.close()
     return filename_or_data
 
-def test(data,data_backend,outfile):
+def test(tokenizer,data,data_backend,outfile):
     outfile = make_dataset(data,data_backend,outfile)
     dataset = NumpyReaderAdapter.load(outfile, data_backend)
     if isinstance(dataset, typing.Iterator):
@@ -75,8 +75,9 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
     data = convert2feature(tokenizer,data,64)
-    test(data, 'memory', 'memory')
-    test(data,'record', './data.record')
-    test(data,'leveldb', './data.leveldb')
-    test(data,'lmdb', './data.lmdb')
+    test(tokenizer, data, 'memory_raw', '')
+    test(tokenizer, data, 'memory', '')
+    test(tokenizer,data,'record', './data.record')
+    test(tokenizer,data,'leveldb', './data.leveldb')
+    test(tokenizer,data,'lmdb', './data.lmdb')
 

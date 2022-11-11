@@ -8,10 +8,11 @@ pip install -U fastdatasets>=0.7.8
 ## 存储
 
 目前支持加载的权重：
-- <strong>tfrecord</strong> 支持压缩
-- <strong>leveldb</strong> 支持压缩
-- <strong>lmdb</strong> 不支持压缩
-- <strong>memory</strong> 内存读写器
+- <strong>tfrecord</strong> 支持压缩 , numpywriter 序列化反序列化
+- <strong>leveldb</strong> 支持压缩 , numpywriter 序列化反序列化
+- <strong>lmdb</strong> 不支持压缩 , numpywriter 序列化反序列化
+- <strong>memory</strong> 内存读写器, numpywriter 序列化反序列化
+- <strong>memory_raw</strong> 内存读写器 , 原始数据迭代器
 
 ## 1. 示例
 
@@ -19,6 +20,7 @@ pip install -U fastdatasets>=0.7.8
 - <strong>auto_writer</strong>  封装 tfrecord leveldb lmdb memory , 普通读写
 - <strong>auto_parallel_writer</strong>  封装 tfrecord leveldb lmdb memory , 适配并行读写
 - <strong>memory_readwriter_example</strong> numpy writer for memory 内存读写
+- <strong>memory_readwriter_example</strong> numpy writer for memory 原始数据内存读写
 - <strong>record_numpywriter_example</strong>  numpy writer for tfrecord
 - <strong>leveldb_readwriter_example</strong>  numpy writer for leveldb
 - <strong>lmdb_readwriter_example</strong> numpy writer for lmdb
