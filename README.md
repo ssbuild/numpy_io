@@ -11,12 +11,14 @@ pip install -U fastdatasets
 - <strong>tfrecord</strong> 支持压缩
 - <strong>leveldb</strong> 支持压缩
 - <strong>lmdb</strong> 不支持压缩
+- <strong>memory</strong> 内存读写器
 
 ## 1. 示例
 
 目前支持加载的权重：
-- <strong>auto_writer</strong>  封装 tfrecord leveldb lmdb , 普通读写
-- <strong>auto_parallel_writer</strong>  封装 tfrecord leveldb lmdb , 适配并行读写
+- <strong>auto_writer</strong>  封装 tfrecord leveldb lmdb memory , 普通读写
+- <strong>auto_parallel_writer</strong>  封装 tfrecord leveldb lmdb memory , 适配并行读写
+- <strong>memory_readwriter_example</strong> numpy writer for memory 内存读写
 - <strong>record_numpywriter_example</strong>  numpy writer for tfrecord
 - <strong>leveldb_readwriter_example</strong>  numpy writer for leveldb
 - <strong>lmdb_readwriter_example</strong> numpy writer for lmdb
@@ -198,4 +200,51 @@ def test_random(db_path):
 test_write(db_path)
 test_random(db_path)
 
+```
+
+## 5. numpy writer and reader for memory
+```python
+# @Time    : 2022/10/27 20:37
+# @Author  : tk
+import numpy as np
+from tqdm import tqdm
+from fastdatasets.memory import MEMORY,load_dataset,WriterObject,DataType,StringWriter,FeatureWriter,NumpyWriter
+
+db_path = 'd:\\example_leveldb_numpy'
+
+def test_write(db_path):
+    options = MEMORY.MemoryOptions()
+    f = NumpyWriter(db_path, options = options)
+    values = []
+    n = 30
+    for i in range(n):
+        train_node = {
+            "index":np.asarray(i,dtype=np.int64),
+            'image': np.random.rand(3,4),
+            'labels': np.random.randint(0,21128,size=(10),dtype=np.int64),
+            'bdata': np.asarray(b'11111111asdadasdasdaa')
+        }
+        values.append(train_node)
+        if (i+1) % 10000 == 0:
+            f.write_batch(values)
+            values.clear()
+    if len(values):
+        f.write_batch(values)
+    real_data = f.file_writer.pop_data()
+    f.close()
+    return real_data
+
+
+def test_random(db_path):
+    options = MEMORY.MemoryOptions()
+    dataset = load_dataset.RandomDataset(db_path,options = options)
+
+    dataset = dataset.parse_from_numpy_writer().shuffle(10)
+    print(len(dataset))
+    for i in tqdm(range(len(dataset)),total=len(dataset)):
+        d = dataset[i]
+        print(i,d)
+
+db_path = test_write(db_path)
+test_random(db_path)
 ```

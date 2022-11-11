@@ -52,11 +52,14 @@ def make_dataset(data,data_backend,outfile):
             numpy_writer.writer.write_batch(batch_values)
     if numpy_writer.is_kv_writer:
         numpy_writer.writer.file_writer.put('total_num',str(len(data)))
-    numpy_writer.close()
 
+    #最终输出形式，内存则返回list, 否则返回文件名 , 应该在文件关闭前返回, 否则data被释放
+    filename_or_data = numpy_writer.get_output()
+    numpy_writer.close()
+    return filename_or_data
 
 def test(data,data_backend,outfile):
-    make_dataset(data,data_backend,outfile)
+    outfile = make_dataset(data,data_backend,outfile)
     dataset = NumpyReaderAdapter.load(outfile, data_backend)
     if isinstance(dataset, typing.Iterator):
         for d in dataset:
@@ -72,7 +75,7 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
     data = convert2feature(tokenizer,data,64)
-
+    test(data, 'memory', 'memory')
     test(data,'record', './data.record')
     test(data,'leveldb', './data.leveldb')
     test(data,'lmdb', './data.lmdb')
