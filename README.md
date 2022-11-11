@@ -12,7 +12,7 @@ pip install -U fastdatasets>=0.7.8
 - <strong>leveldb</strong> 支持压缩 , numpywriter 序列化反序列化
 - <strong>lmdb</strong> 不支持压缩 , numpywriter 序列化反序列化
 - <strong>memory</strong> 内存读写器, numpywriter 序列化反序列化
-- <strong>memory_raw</strong> 内存读写器 , 原始数据迭代器
+- <strong>memory_raw</strong> 内存读写器 , 原始数据迭代器，内存copy形式
 
 ## 1. 介绍
 
@@ -252,7 +252,7 @@ db_path = test_write(db_path)
 test_random(db_path)
 ```
 
-## 5. numpy writer and reader for raw memory
+## 6. numpy writer and reader for raw memory
 ```python
 # @Time    : 2022/10/27 20:37
 # @Author  : tk
