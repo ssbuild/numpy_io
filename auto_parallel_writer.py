@@ -37,11 +37,10 @@ def tokenize_data(data: typing.Any,user_data: tuple):
 
 
 def make_dataset(tokenizer,data,data_backend,outputfile):
-    parallel_writer = ParallelNumpyWriter(num_process_worker=1)
+    parallel_writer = ParallelNumpyWriter(num_process_worker=0)
     parallel_writer.initailize_input_hook(tokenize_data, (tokenizer,64))
     parallel_writer.initialize_writer(outputfile,data_backend)
     parallel_writer.parallel_apply(data)
-
 
     return parallel_writer.get_result() or outputfile
 
