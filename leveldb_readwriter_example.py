@@ -9,8 +9,11 @@ db_path = 'd:\\example_leveldb_numpy'
 def test_write(db_path):
     options = DB.LeveldbOptions(create_if_missing=True,error_if_exists=False)
     f = NumpyWriter(db_path, options = options)
-    keys,values = [],[]
+
+    #如果有数据,则添加
+    total_num = int(f.file_writer.get('total_num',0))
     n = 30
+    keys, values = [], []
     for i in range(n):
         train_node = {
             "index":np.asarray(i,dtype=np.int64),
@@ -18,7 +21,7 @@ def test_write(db_path):
             'labels': np.random.randint(0,21128,size=(10),dtype=np.int64),
             'bdata': np.asarray(b'11111111asdadasdasdaa')
         }
-        keys.append('input{}'.format(i))
+        keys.append('input{}'.format(total_num+i))
         values.append(train_node)
         if (i+1) % 10000 == 0:
             f.put_batch(keys,values)
@@ -27,7 +30,7 @@ def test_write(db_path):
     if len(keys):
         f.put_batch(keys, values)
 
-    f.file_writer.put('total_num',str(n))
+    f.file_writer.put('total_num',str(total_num + n))
     f.close()
 
 
