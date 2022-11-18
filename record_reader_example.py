@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/10/18 9:36
+import random
 
 from fastdatasets.record import load_dataset as Loader,gfile,RECORD
 
