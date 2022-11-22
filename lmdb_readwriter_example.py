@@ -16,7 +16,8 @@ def test_write(db_path):
 
     f = NumpyWriter(db_path, options = options,map_size=1024 * 1024 * 1024)
 
-    total_num = int(f.file_writer.get('total_num', 0))
+    # total_num = int(f.get_writer.get('total_num', 0))
+    total_num = 0
     n = 30
     keys, values = [], []
     for i in range(n):
@@ -34,7 +35,7 @@ def test_write(db_path):
     if len(keys):
         f.put_batch(keys, values)
 
-    f.file_writer.put('total_num', str(total_num + n))
+    f.get_writer.put('total_num', str(total_num + n))
     f.close()
 
 
