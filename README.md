@@ -1,7 +1,7 @@
 # fastdatasets tfrecords examples
 
 ##   install
-pip install -U fastdatasets>=0.7.8
+pip install -U fastdatasets>=0.9.0
 
 
 

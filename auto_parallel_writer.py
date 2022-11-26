@@ -38,16 +38,14 @@ def tokenize_data(data: typing.Any,user_data: tuple):
 
 def make_dataset(tokenizer,data,data_backend,outputfile):
     parallel_writer = ParallelNumpyWriter(num_process_worker=0)
-    parallel_writer.initailize_input_hook(tokenize_data, (tokenizer,64))
-    parallel_writer.initialize_writer(outputfile,data_backend)
-    parallel_writer.parallel_apply(data)
-
-    return parallel_writer.get_result() or outputfile
+    parallel_writer.open(outputfile,data_backend)
+    parallel_writer.write(data,tokenize_data, (tokenizer,64))
 
 
-def test(tokenizer,data,data_backend,outputfile):
-    outputfile = make_dataset(tokenizer,data,data_backend,outputfile)
-    dataset = NumpyReaderAdapter.load(outputfile, data_backend)
+
+def test(tokenizer,data,data_backend,output):
+    make_dataset(tokenizer,data,data_backend,output)
+    dataset = NumpyReaderAdapter.load(output, data_backend)
     if isinstance(dataset, typing.Iterator):
         for d in dataset:
             print(d)
@@ -63,8 +61,8 @@ if __name__ == '__main__':
     # data = DataReadLoader.read_from_file(filename)
     data = [str(i) + 'fastdatasets numpywriter demo' for i in range(1000)]
 
-    test(tokenizer,data, 'memory_raw', '')
-    test(tokenizer,data, 'memory', '')
+    test(tokenizer,data, 'memory_raw', [])
+    test(tokenizer,data, 'memory',  [])
     test(tokenizer,data,'record','./data.record')
     test(tokenizer,data,'leveldb', './data.leveldb')
     test(tokenizer,data,'lmdb', './data.lmdb')
