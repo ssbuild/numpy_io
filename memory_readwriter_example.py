@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from fastdatasets.memory import MEMORY,load_dataset,WriterObject,DataType,StringWriter,FeatureWriter,NumpyWriter
 
-db_path = 'd:\\example_leveldb_numpy'
+db_path = []
 
 def test_write(db_path):
     options = MEMORY.MemoryOptions()
@@ -40,5 +40,5 @@ def test_random(db_path):
         d = dataset[i]
         print(i,d)
 
-db_path = test_write(db_path)
+test_write(db_path)
 test_random(db_path)
