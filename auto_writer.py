@@ -4,7 +4,7 @@ import typing
 import numpy as np
 from tqdm import tqdm
 from transformers import BertTokenizer
-from fastdatasets.utils.NumpyAdapter import NumpyWriterAdapter,NumpyReaderAdapter
+from fastdatasets.utils.numpyadapter import NumpyWriterAdapter,NumpyReaderAdapter
 
 
 def convert2feature(tokenizer:BertTokenizer,data,max_seq_length):

@@ -1,7 +1,7 @@
 # @Time    : 2022/11/6 10:40
 import typing
 import numpy as np
-from fastdatasets.utils.NumpyAdapter import ParallelNumpyWriter,NumpyReaderAdapter
+from fastdatasets.utils.numpyadapter import ParallelNumpyWriter,NumpyReaderAdapter
 from transformers import BertTokenizer
 
 # 切分词
