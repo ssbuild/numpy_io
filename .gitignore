@@ -1,1 +1,4 @@
 /.idea
+/build
+/dist
+/numpy_io.egg-info

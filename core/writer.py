@@ -4,7 +4,7 @@
 
 import typing
 
-from fastdatasets.utils.numpyadapter import NumpyWriterAdapter, ParallelNumpyWriter
+from .numpyadapter import NumpyWriterAdapter, ParallelNumpyWriter
 
 __all__ = [
     'DataWriteHelper',

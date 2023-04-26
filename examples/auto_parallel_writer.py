@@ -1,9 +1,9 @@
 # @Time    : 2022/11/6 10:40
 import typing
 import numpy as np
-from fastdatasets.utils.numpyadapter import ParallelNumpyWriter,NumpyReaderAdapter
-from transformers import BertTokenizer
 
+from transformers import BertTokenizer
+from numpy_io.core.numpyadapter import ParallelNumpyWriter,NumpyReaderAdapter
 # 切分词
 def tokenize_data(data: typing.Any,user_data: tuple):
     tokenizer: BertTokenizer
