@@ -275,6 +275,7 @@ class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
 
     # 继承
     def on_output_process(self, x):
+        #忽略None数据
         if x is None:
             return
         # 返回多个结果
@@ -295,7 +296,6 @@ class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
     # 继承
     def on_output_cleanup(self):
         if self.numpy_writer is not None:
-            result = None
             if len(self.batch_values) > 0:
                 self.flush()
             if self.is_kv_writer:
