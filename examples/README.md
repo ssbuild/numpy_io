@@ -8,11 +8,11 @@ pip install -U fastdatasets>=0.9.0
 ## 存储
 
 目前支持加载的权重：
-- <strong>tfrecord</strong> 支持压缩 , numpywriter 序列化反序列化
-- <strong>leveldb</strong> 支持压缩 , numpywriter 序列化反序列化
-- <strong>lmdb</strong> 不支持压缩 , numpywriter 序列化反序列化
-- <strong>memory</strong> 内存读写器, numpywriter 序列化反序列化
-- <strong>memory_raw</strong> 内存读写器 , 原始数据迭代器，内存copy形式
+- <strong>tfrecord</strong> 支持压缩 ， 支持多进程 , numpywriter 序列化反序列化
+- <strong>leveldb</strong> 支持压缩 不支持多进程 , numpywriter 序列化反序列化
+- <strong>lmdb</strong> 不支持压缩 , 支持多进程 , numpywriter 序列化反序列化
+- <strong>memory</strong> 内存读写器, 支持多进程, numpywriter 序列化反序列化
+- <strong>memory_raw</strong> 内存读写器 , 支持多进程, 原始数据迭代器，内存copy形式
 
 ## 1. 介绍
 
@@ -191,7 +191,7 @@ def test_write(db_path):
 def test_random(db_path):
     options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY,
                                env_open_mode=0o664,  # 8进制表示
-                               txn_flag=0,
+                               txn_flag=DB.LmdbFlag.MDB_RDONLY,
                                dbi_flag=0,
                                put_flag=0)
     dataset = load_dataset.RandomDataset(db_path,

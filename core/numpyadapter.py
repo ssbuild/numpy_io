@@ -194,7 +194,7 @@ class NumpyReaderAdapter:
             if options is None:
                 options = LMDB.LmdbOptions(env_open_flag=LMDB.LmdbFlag.MDB_RDONLY,
                                            env_open_mode=0o664,  # 8进制表示
-                                           txn_flag=0,
+                                           txn_flag=LMDB.LmdbFlag.MDB_RDONLY,
                                            dbi_flag=0,
                                            put_flag=0)
             dataset = lmdb_loader.RandomDataset(input_files,

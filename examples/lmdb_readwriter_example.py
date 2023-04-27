@@ -6,6 +6,7 @@ from tqdm import tqdm
 from fastdatasets.lmdb import DB,load_dataset,WriterObject,DataType,StringWriter,JsonWriter,FeatureWriter,NumpyWriter
 
 db_path = 'd:\\example_lmdb_numpy'
+db_path = '/tmp/example_lmdb_numpy'
 
 def test_write(db_path):
     options = DB.LmdbOptions(env_open_flag = 0,
@@ -41,9 +42,13 @@ def test_write(db_path):
 
 
 def test_random(db_path):
-    options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY,
-                               env_open_mode=0o664,  # 8进制表示
-                               txn_flag=0,
+    import os
+
+
+    options = DB.LmdbOptions(env_open_flag=DB.LmdbFlag.MDB_RDONLY | DB.LmdbFlag.MDB_NOLOCK,
+                               # env_open_mode=0o664,  # 8进制表示
+                                env_open_mode=0o664,  # 8进制表示
+                               txn_flag=DB.LmdbFlag.MDB_RDONLY,
                                dbi_flag=0,
                                put_flag=0)
     dataset = load_dataset.RandomDataset(db_path,
@@ -55,7 +60,18 @@ def test_random(db_path):
     print(len(dataset))
     for i in tqdm(range(len(dataset)), total=len(dataset)):
         d = dataset[i]
-        print(d)
+        print(os.getpid())
 
-test_write(db_path)
-test_random(db_path)
+# test_write(db_path)
+
+import multiprocessing
+
+result_p = []
+for i in range(3):
+    p = multiprocessing.Process(target=test_random,args=(db_path,))
+    p.start()
+    result_p.append(p)
+    # test_random(db_path)
+
+for p in result_p:
+    p.join()
