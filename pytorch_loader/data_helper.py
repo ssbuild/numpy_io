@@ -110,14 +110,18 @@ class DataHelperBase(DataPreprocessCallback):
                      num_process_worker: int = 0,
                      shuffle: bool=True):
 
+        #初始化
         self.on_data_ready()
+        #创建写对象上下文
         fw = DataWriteHelper(self.on_data_process,
                              input_fn_args,
                              outfile,
                              getattr(self,'backend','record'),
                              num_process_worker=num_process_worker,
                              shuffle=shuffle)
+        #写数据回调 on_data_process
         fw.save(data)
+        #写数据完成
         self.on_data_finalize()
 
 
