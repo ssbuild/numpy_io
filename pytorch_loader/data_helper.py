@@ -5,7 +5,7 @@ import json
 import os
 import typing
 from ..core.writer import DataWriteHelper
-from .dataloaders import load_distributed_random_sampler, load_random_sampler, load_sequential_sampler
+from .dataloaders import load_distributed_random_sampler, load_random_sampler
 from .tokenizer_config_helper import *
 
 __all__ = [
@@ -13,7 +13,6 @@ __all__ = [
     "DataHelperBase",
     "load_distributed_random_sampler",
     "load_random_sampler",
-    "load_sequential_sampler",
     'load_tokenizer',
     'load_configure',
 ]
@@ -87,12 +86,19 @@ class DataHelperBase(DataPreprocessCallback):
     def load_random_sampler(self,*args,**kwargs):
         if 'backend' not in kwargs:
             kwargs.update({"backend": getattr(self,'backend','record')})
+        kwargs.update({
+            "shuffle": True,
+        })
         return load_random_sampler(*args, **kwargs)
 
     def load_sequential_sampler(self,*args,**kwargs):
         if 'backend' not in kwargs:
             kwargs.update({"backend": getattr(self,'backend','record')})
-        return load_sequential_sampler(*args, **kwargs)
+
+        kwargs.update({
+            "shuffle": False,
+        })
+        return load_random_sampler(*args, **kwargs)
 
 
 

@@ -111,44 +111,6 @@ def load_dataset(files: typing.Union[typing.List, str],
         dataset_ = torch_Dataset(dataset) if with_torchdataset else dataset
     return dataset_
 
-def load_random_sampler(files: typing.Union[typing.List, str],
-                        batch_size,
-                        collate_fn=None,
-                        pin_memory=False,
-                        shuffle: bool = False,
-                        infinite: bool = False,
-                        cycle_length: int = 4,
-                        block_length: int = 10,
-                        num_processes: int = 1,
-                        process_index: int = 0,
-                        backend='record',
-                        with_record_iterable_dataset: bool = False,
-                        with_load_memory: bool = False,
-                        with_torchdataset: bool = True,
-                        transform_fn: typing.Callable = None,
-                        check_dataset_file_fn=None,
-                        limit_start: typing.Optional[int] = None,
-                        limit_count: typing.Optional[int] = None,
-                        dataset_loader_filter_fn: typing.Callable = None,
-                        **kwargs
-                        ) -> typing.Optional[typing.Union[
-    DataLoader, torch.utils.data.Dataset, torch.utils.data.IterableDataset, IterableDatasetBase, RandomDatasetBase]]:
-    dataset = load_dataset(
-        files, shuffle=shuffle, infinite=infinite, cycle_length=cycle_length,
-        block_length=block_length, num_processes=num_processes, process_index=process_index,
-        backend=backend, with_record_iterable_dataset=with_record_iterable_dataset,
-        with_load_memory=with_load_memory, with_torchdataset=with_torchdataset,
-        transform_fn=transform_fn, check_dataset_file_fn=check_dataset_file_fn,
-        limit_start=limit_start,
-        limit_count=limit_count,
-        dataset_loader_filter_fn=dataset_loader_filter_fn,
-    )
-    if dataset is None:
-        return None
-    return DataLoader(dataset, batch_size=batch_size,
-                      shuffle=False if isinstance(dataset, IterableDataset) else shuffle,
-                      collate_fn=collate_fn,
-                      pin_memory=pin_memory, **kwargs)
 
 
 
@@ -202,45 +164,43 @@ def load_distributed_random_sampler(files: typing.Union[typing.List, str],
 
 
 
-
-def load_sequential_sampler(files: typing.Union[typing.List, str],
-                 batch_size,
-                 collate_fn=None,
-                 pin_memory=False,
-                 shuffle: bool=False,
-                 infinite: bool=False,
-                 cycle_length: int=4,
-                 block_length: int=10,
-                 num_processes: int = 1,
-                 process_index: int = 0,
-                 backend='record',
-                 with_record_iterable_dataset: bool = False,
-                 with_load_memory: bool = False,
-                 with_torchdataset: bool = True,
-                 transform_fn : typing.Callable = None,
-                 check_dataset_file_fn=None,
-                limit_start: typing.Optional[int] = None,
-                limit_count: typing.Optional[int] = None,
-                dataset_loader_filter_fn: typing.Callable = None,
-                **kwargs
-                            ) -> typing.Optional[typing.Union[DataLoader,torch.utils.data.Dataset,torch.utils.data.IterableDataset,IterableDatasetBase,RandomDatasetBase]]:
-
+def load_random_sampler(files: typing.Union[typing.List, str],
+                        batch_size,
+                        collate_fn=None,
+                        pin_memory=False,
+                        shuffle: bool = False,
+                        infinite: bool = False,
+                        cycle_length: int = 4,
+                        block_length: int = 10,
+                        num_processes: int = 1,
+                        process_index: int = 0,
+                        backend='record',
+                        with_record_iterable_dataset: bool = False,
+                        with_load_memory: bool = False,
+                        with_torchdataset: bool = True,
+                        transform_fn: typing.Callable = None,
+                        check_dataset_file_fn=None,
+                        limit_start: typing.Optional[int] = None,
+                        limit_count: typing.Optional[int] = None,
+                        dataset_loader_filter_fn: typing.Callable = None,
+                        **kwargs
+                        ) -> typing.Optional[typing.Union[
+    DataLoader, torch.utils.data.Dataset, torch.utils.data.IterableDataset, IterableDatasetBase, RandomDatasetBase]]:
     dataset = load_dataset(
-        files,shuffle=shuffle,
-        infinite=infinite,
-        cycle_length=cycle_length,
-        block_length=block_length,num_processes=num_processes,process_index=process_index,
-        backend=backend,with_record_iterable_dataset=with_record_iterable_dataset,
-        with_load_memory=with_load_memory,with_torchdataset=with_torchdataset,
-        transform_fn=transform_fn,check_dataset_file_fn=check_dataset_file_fn,
+        files, shuffle=shuffle, infinite=infinite, cycle_length=cycle_length,
+        block_length=block_length, num_processes=num_processes, process_index=process_index,
+        backend=backend, with_record_iterable_dataset=with_record_iterable_dataset,
+        with_load_memory=with_load_memory, with_torchdataset=with_torchdataset,
+        transform_fn=transform_fn, check_dataset_file_fn=check_dataset_file_fn,
         limit_start=limit_start,
         limit_count=limit_count,
         dataset_loader_filter_fn=dataset_loader_filter_fn,
     )
     if dataset is None:
         return None
-    return DataLoader(dataset,
-                      batch_size=batch_size,
-                      shuffle=shuffle,
+    return DataLoader(dataset, batch_size=batch_size,
+                      shuffle=False if isinstance(dataset, IterableDataset) else shuffle,
                       collate_fn=collate_fn,
-                      pin_memory=pin_memory,**kwargs)
+                      pin_memory=pin_memory, **kwargs)
+
+
