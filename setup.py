@@ -3,11 +3,11 @@
 
 from setuptools import setup, find_packages
 
-ignore = ['test','tests']
+ignore = []
 
 setup(
     name='numpy-io',
-    version='0.0.2',
+    version='0.0.3',
     description='an easy training architecture',
     long_description='numpy-io: https://github.com/ssbuild/numpy-io.git',
     license='Apache License 2.0',

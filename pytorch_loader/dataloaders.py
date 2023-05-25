@@ -153,8 +153,7 @@ def load_random_sampler(files: typing.Union[typing.List, str],
 
 
 
-def load_distributed_random_sampler(
-                                    files: typing.Union[typing.List, str],
+def load_distributed_random_sampler(files: typing.Union[typing.List, str],
                                     batch_size,
                                     num_processes: int = 1,
                                     process_index: int = 0,
@@ -163,6 +162,7 @@ def load_distributed_random_sampler(
                                     backend='record',
                                     with_load_memory: bool = False,
                                     with_torchdataset: bool = True,
+                                    shuffle=True,
                                     transform_fn: typing.Callable = None,
                                     check_dataset_file_fn=None,
                                     limit_start: typing.Optional[int] = None,
@@ -182,9 +182,18 @@ def load_distributed_random_sampler(
     if dataset is None:
         return None
 
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset,num_replicas=num_processes,rank=process_index) if num_processes > 1 else None
+    sampler = torch.utils.data.distributed.DistributedSampler(dataset,
+                                                              num_replicas=num_processes,
+                                                              rank=process_index,
+                                                              shuffle=shuffle) if num_processes > 1 else None
+
+    if not shuffle:
+        do_shuffle = False
+    else:
+        do_shuffle = sampler is None
+
     return DataLoader(dataset, batch_size=batch_size,
-                      shuffle=sampler is None,
+                      shuffle=do_shuffle,
                       sampler=sampler,
                       collate_fn=collate_fn,
                       pin_memory=pin_memory, **kwargs)
