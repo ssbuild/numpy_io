@@ -6,7 +6,7 @@ import os
 import typing
 from ..core.writer import DataWriteHelper
 from .dataloaders import load_distributed_random_sampler, load_random_sampler, load_sequential_sampler
-
+from .tokenizer_config_helper import *
 
 __all__ = [
     "DataPreprocessCallback",
@@ -14,6 +14,8 @@ __all__ = [
     "load_distributed_random_sampler",
     "load_random_sampler",
     "load_sequential_sampler",
+    'load_tokenizer',
+    'load_configure',
 ]
 
 class DataPreprocessCallback(object):
