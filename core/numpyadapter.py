@@ -149,15 +149,18 @@ class NumpyWriterAdapter:
 
         # table
         elif self._backend == E_file_backend.arrow_stream:
+            self._kv_flag = False
             self._buffer_batch_size = 1024
             self._is_table = True
             self._f_writer = arrow_writer.PythonWriter(filename,with_stream=True,schema=schema, options=options)
 
         elif self._backend == E_file_backend.arrow_file:
+            self._kv_flag = False
             self._buffer_batch_size = 1024
             self._is_table = True
             self._f_writer = arrow_writer.PythonWriter(filename, with_stream=False, schema=schema, options=options)
         elif self._backend == E_file_backend.parquet:
+            self._kv_flag = False
             self._buffer_batch_size = 1024
             self._is_table = True
             self._f_writer = parquet_writer.PythonWriter(filename,

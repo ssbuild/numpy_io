@@ -44,6 +44,7 @@ def make_dataset(tokenizer,data,data_backend,schema,outputfile):
 
 
 def test(tokenizer,data,data_backend,output):
+    print('*' * 30,data_backend)
     schema = None
     if data_backend.find('arrow') != -1 or data_backend.find('parquet') != -1:
         schema = {
