@@ -36,15 +36,24 @@ def tokenize_data(data: typing.Any,user_data: tuple):
     return node
 
 
-def make_dataset(tokenizer,data,data_backend,outputfile):
+def make_dataset(tokenizer,data,data_backend,schema,outputfile):
     parallel_writer = ParallelNumpyWriter(num_process_worker=0)
-    parallel_writer.open(outputfile,data_backend)
+    parallel_writer.open(outputfile,data_backend,schema=schema)
     parallel_writer.write(data,tokenize_data, (tokenizer,64))
 
 
 
 def test(tokenizer,data,data_backend,output):
-    make_dataset(tokenizer,data,data_backend,output)
+    schema = None
+    if data_backend.find('arrow') != -1 or data_backend.find('parquet') != -1:
+        schema = {
+            'input_ids': "int32",
+            'attention_mask': "int32",
+            'token_type_ids': "int32",
+            'seqlen': "int32",
+        }
+
+    make_dataset(tokenizer,data,data_backend,schema,output)
     dataset = NumpyReaderAdapter.load(output, data_backend)
     if isinstance(dataset, typing.Iterator):
         for d in dataset:
@@ -66,3 +75,6 @@ if __name__ == '__main__':
     test(tokenizer,data,'record','./data.record')
     test(tokenizer,data,'leveldb', './data.leveldb')
     test(tokenizer,data,'lmdb', './data.lmdb')
+    test(tokenizer, data, 'arrow_stream', './data.arrow_stream')
+    test(tokenizer, data, 'arrow_file', './data.arrow_file')
+    test(tokenizer, data, 'parquet', './data.arrow_file')
