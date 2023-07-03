@@ -96,7 +96,8 @@ class NumpyWriterAdapter:
                  schema : typing.Optional[typing.Dict] = None,
                  leveldb_write_buffer_size=1024 * 1024 * 512,
                  leveldb_max_file_size=10 * 1024 * 1024 * 1024,
-                 lmdb_map_size=1024 * 1024 * 1024 * 150):
+                 lmdb_map_size=1024 * 1024 * 1024 * 150,
+                 batch_size=None):
 
         self.filename = filename
         self.schema = schema
@@ -173,6 +174,9 @@ class NumpyWriterAdapter:
                 'NumpyWriterAdapter does not support backend={} , not in record,leveldb,lmdb,memory,meory_raw'.format(
                     backend))
 
+        if batch_size is not None:
+            self._buffer_batch_size = batch_size
+        assert self._buffer_batch_size > 0
     def __del__(self):
         self.close()
 
@@ -204,6 +208,9 @@ class NumpyWriterAdapter:
     def buffer_batch_size(self):
         return self._buffer_batch_size
 
+    @buffer_batch_size.setter
+    def buffer_batch_size(self,batch_size):
+        self._buffer_batch_size = batch_size
 
 class NumpyReaderAdapter:
     @staticmethod
@@ -349,7 +356,8 @@ class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
              schema: typing.Optional[typing.Dict] = None,
              leveldb_write_buffer_size=1024 * 1024 * 512,
              leveldb_max_file_size=10 * 1024 * 1024 * 1024,
-             lmdb_map_size=1024 * 1024 * 1024 * 150):
+             lmdb_map_size=1024 * 1024 * 1024 * 150,
+             batch_size=None):
 
         self.numpy_writer = NumpyWriterAdapter(outfile,
                                                backend = backend,
@@ -358,7 +366,8 @@ class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
                                                schema=schema,
                                                leveldb_write_buffer_size = leveldb_write_buffer_size,
                                                leveldb_max_file_size=leveldb_max_file_size,
-                                               lmdb_map_size = lmdb_map_size)
+                                               lmdb_map_size = lmdb_map_size,
+                                               batch_size=batch_size)
         self.backend = self.numpy_writer.backend
         self.backend_type = self.numpy_writer.backend_type
         self.is_kv_writer = self.numpy_writer.is_kv_writer
