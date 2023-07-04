@@ -4,7 +4,7 @@
 
 import typing
 
-from .numpyadapter import NumpyWriterAdapter, ParallelNumpyWriter
+from .numpyadapter import NumpyWriterAdapter, ParallelNumpyWriter,E_file_backend
 
 __all__ = [
     'DataWriteHelper',
@@ -20,7 +20,7 @@ class DataWriteHelper:
                  backend='record',
                  num_process_worker=0,
                  shuffle=True):
-        assert backend in ['record', 'lmdb', 'leveldb','memory','memory_raw']
+        assert E_file_backend.from_string(backend) is not None
 
         self.input_fn = input_fn
         self.input_fn_args = input_fn_args
@@ -37,6 +37,23 @@ class DataWriteHelper:
         self._backend_type = value
 
     # 多进程写大文件
-    def save(self,data: list):
-        self._parallel_writer.open(self.outfile ,self.backend_type)
+    def save(self,data: list,
+             options=None,
+             parquet_options: typing.Optional = None,
+             schema: typing.Optional[typing.Dict] = None,
+             leveldb_write_buffer_size=1024 * 1024 * 512,
+             leveldb_max_file_size=10 * 1024 * 1024 * 1024,
+             lmdb_map_size=1024 * 1024 * 1024 * 150,
+             batch_size=None
+             ):
+
+        self._parallel_writer.open(self.outfile ,
+                                   backend=self.backend_type,
+                                   schema=schema,
+                                   parquet_options=parquet_options,
+                                   options=options,
+                                   leveldb_write_buffer_size=leveldb_write_buffer_size,
+                                   leveldb_max_file_size=leveldb_max_file_size,
+                                   lmdb_map_size = lmdb_map_size,
+                                   batch_size=batch_size)
         self._parallel_writer.write(data,self.input_fn, self.input_fn_args)

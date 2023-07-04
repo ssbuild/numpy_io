@@ -298,7 +298,7 @@ class NumpyReaderAdapter:
                 dataset = arrow_loader.RandomDataset(input_files,
                                                      options=options,
                                                      col_names=col_names,
-                                                     with_share_memory=True)
+                                                     with_share_memory=False)
         elif data_backend == E_file_backend.arrow_file:
             parse_flag = False
             if with_record_iterable_dataset:
@@ -307,12 +307,12 @@ class NumpyReaderAdapter:
                                                        block_length=block_length,
                                                        options=options,
                                                        col_names=col_names,
-                                                       with_share_memory=with_share_memory)
+                                                       with_share_memory=True)
             else:
                 dataset = arrow_loader.RandomDataset(input_files,
                                                      options=options,
                                                      col_names=col_names,
-                                                     with_share_memory=with_share_memory)
+                                                     with_share_memory=True)
         elif data_backend == E_file_backend.parquet:
             parse_flag = False
             if with_record_iterable_dataset:

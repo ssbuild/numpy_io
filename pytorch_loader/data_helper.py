@@ -2,6 +2,7 @@
 # @Author  : tk
 # @Time    : 2023/5/25 9:37
 import json
+import logging
 import os
 import typing
 from ..core.writer import DataWriteHelper
@@ -67,6 +68,18 @@ class DataPreprocessCallback(object):
 
 class DataHelperBase(DataPreprocessCallback):
     backend = 'record'
+
+    def __init__(self,backend,convert_file,cache_dir,intermediate_name,):
+        self.train_files = []
+        self.eval_files = []
+        self.test_files = []
+
+        self.backend = backend if backend else 'record'
+        self.convert_file = convert_file
+        self.intermediate_name = intermediate_name
+        self.cache_dir = cache_dir
+
+
     def load_distributed_random_sampler(self,*args,**kwargs):
         if 'backend' not in kwargs:
             kwargs.update({"backend": getattr(self,'backend','record')})
@@ -108,21 +121,133 @@ class DataHelperBase(DataPreprocessCallback):
                      data,
                      input_fn_args: typing.Any,
                      num_process_worker: int = 0,
-                     shuffle: bool=True):
+                     shuffle: bool=True,
+                     options=None,
+                     parquet_options: typing.Optional = None,
+                     schema: typing.Optional[typing.Dict] = None,
+                     leveldb_write_buffer_size=1024 * 1024 * 512,
+                     leveldb_max_file_size=10 * 1024 * 1024 * 1024,
+                     lmdb_map_size=1024 * 1024 * 1024 * 150,
+                     batch_size=None):
 
         #初始化
         self.on_data_ready()
         #创建写对象上下文
         fw = DataWriteHelper(self.on_data_process,
-                             input_fn_args,
-                             outfile,
-                             getattr(self,'backend','record'),
+                             input_fn_args=input_fn_args,
+                             outfile=outfile,
+                             backend=getattr(self,'backend','record'),
                              num_process_worker=num_process_worker,
                              shuffle=shuffle)
         #写数据回调 on_data_process
-        fw.save(data)
+        fw.save(data,
+                options=options,
+                parquet_options = parquet_options,
+                schema = schema,
+                leveldb_write_buffer_size = leveldb_write_buffer_size,
+                leveldb_max_file_size =leveldb_max_file_size,
+                lmdb_map_size = lmdb_map_size,
+                batch_size = batch_size)
         #写数据完成
         self.on_data_finalize()
+
+        # 返回制作特征数据的中间文件
+
+    def get_intermediate_file(self, intermediate_name, mode):
+        if self.backend.startswith('memory'):
+            # 内存数据: list
+            intermediate_output = []
+            logging.info('make data {} {}...'.format(self.cache_dir,
+                                                     intermediate_name + '-' + mode + '.' + self.backend))
+        else:
+            # 本地文件数据: 文件名
+            intermediate_output = os.path.join(self.cache_dir,
+                                               intermediate_name + '-' + mode + '.' + self.backend)
+            logging.info('make data {}...'.format(intermediate_output))
+        return intermediate_output
+
+    def make_dataset_with_args(self, input_files,
+                               mode,
+                               shuffle=False,
+                               num_process_worker: int = 0,
+                               overwrite: bool = False,
+                               mixed_data=True,
+                               dupe_factor=1,
+                               **dataset_args):
+        '''
+            mode: one of [ train , eval , test]
+            shuffle: whether shuffle data
+            num_process_worker: the number of mutiprocess
+            overwrite: whether overwrite data
+            mixed_data: Whether the mixed data
+        '''
+        logging.info('make_dataset {} {}...'.format(','.join(input_files), mode))
+        if mode == 'train':
+            contain_objs = self.train_files
+        elif mode == 'eval' or mode == 'val':
+            contain_objs = self.eval_files
+        elif mode == 'test' or mode == 'predict':
+            contain_objs = self.test_files
+        else:
+            raise ValueError('{} invalid '.format(mode))
+
+        if not input_files:
+            logging.info('input_files empty!')
+            return
+
+        for i in range(dupe_factor):
+            if self.convert_file:
+                if mixed_data:
+                    intermediate_name = self.intermediate_name + '_dupe_factor_{}'.format(i)
+                    intermediate_output = self.get_intermediate_file(intermediate_name, mode)
+
+                    if isinstance(intermediate_output, list) or not os.path.exists(intermediate_output) or overwrite:
+                        data = self.on_get_corpus(input_files, mode)
+                        self.make_dataset(intermediate_output,
+                                          data,
+                                          mode,
+                                          num_process_worker=num_process_worker,
+                                          shuffle=shuffle,
+                                          **dataset_args)
+                    contain_objs.append(intermediate_output)
+                else:
+                    for fid, input_item in enumerate(input_files):
+                        intermediate_name = self.intermediate_name + '_file_{}_dupe_factor_{}'.format(fid, i)
+                        intermediate_output = self.get_intermediate_file(intermediate_name, mode)
+
+                        if isinstance(intermediate_output, list) or not os.path.exists(
+                                intermediate_output) or overwrite:
+                            data = self.on_get_corpus([input_item], mode)
+                            self.make_dataset(intermediate_output,
+                                              data,
+                                              mode,
+                                              num_process_worker=num_process_worker,
+                                              shuffle=shuffle,
+                                              **dataset_args)
+                        contain_objs.append(intermediate_output)
+
+            else:
+                for input_item in input_files:
+                    contain_objs.append(input_item)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def make_dataset(data: typing.List,
@@ -131,8 +256,24 @@ def make_dataset(data: typing.List,
                outfile:str,
                backend: str,
                overwrite = False,
-               num_process_worker:int = 8):
+               num_process_worker:int = 8,
+               options=None,
+               parquet_options=None,
+               schema=None,
+               leveldb_write_buffer_size=None,
+               leveldb_max_file_size=None,
+               lmdb_map_size=None,
+               batch_size=None
+                 ):
 
     if not os.path.exists(outfile) or overwrite:
         fw = DataWriteHelper(input_fn,input_fn_args,outfile,backend,num_process_worker)
-        fw.save(data)
+        fw.save(data,
+                options=options,
+                parquet_options=parquet_options,
+                schema=schema,
+                leveldb_write_buffer_size=leveldb_write_buffer_size,
+                leveldb_max_file_size=leveldb_max_file_size,
+                lmdb_map_size=lmdb_map_size,
+                batch_size=batch_size
+                )
