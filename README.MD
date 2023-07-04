@@ -10,7 +10,10 @@
 - <strong>lmdb</strong> 不支持压缩 , 支持多进程 , numpywriter 序列化反序列化
 - <strong>memory</strong> 内存读写器, 支持多进程, numpywriter 序列化反序列化
 - <strong>memory_raw</strong> 内存读写器 , 支持多进程, 原始数据迭代器，内存copy形式
-
+- <strong>arrow_stream</strong> arrow 读写 
+- <strong>arrow_file</strong> arrow 读写 
+- <strong>parquet</strong> parquet 读写 
+- 
 ## 1. 介绍
 
 目前支持加载的数据形式：

@@ -47,6 +47,7 @@ def load_dataset(files: typing.Union[typing.List, str],
                  backend='record',
                  with_record_iterable_dataset: bool = False,
                  with_load_memory: bool = False,
+                 with_arrow_copy_to_memory=False,
                  with_torchdataset: bool = True,
                  transform_fn: typing.Callable = None,
                  check_dataset_file_fn=None,
@@ -69,6 +70,12 @@ def load_dataset(files: typing.Union[typing.List, str],
                                  limit_start=limit_start,
                                  limit_count=limit_count,
                                  dataset_loader_filter_fn=dataset_loader_filter_fn)
+
+    if backend.startswith('arrow') or backend.startswith('parquet'):
+        with_load_memory = False
+        if with_arrow_copy_to_memory:
+            with_load_memory = True
+
     # 加载至内存
     if with_load_memory:
         logging.info('load dataset to memory...')
@@ -79,7 +86,7 @@ def load_dataset(files: typing.Union[typing.List, str],
 
         dataset = MEMORY.load_dataset.SingleRandomDataset(raw_data)
         # 解析numpy数据
-        if backend != 'memory_raw':
+        if backend != 'memory_raw' and not backend.startswith('arrow') and not backend.startswith('parquet'):
             dataset = dataset.parse_from_numpy_writer()
 
     if isinstance(dataset, typing.Iterator):
