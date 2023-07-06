@@ -1,3 +1,5 @@
+## update information
+    07-06 0.0.5.post0 fix fastdatasets>=0.9.14
 
 
 ## numpy 序列化反序列化
