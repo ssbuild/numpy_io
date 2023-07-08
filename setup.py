@@ -15,7 +15,7 @@ setup(
     author='ssbuild',
     author_email='9727464@qq.com',
     install_requires=[
-        'fastdatasets>=0.9.14 , < 0.9.15',
+        'fastdatasets>=0.9.14 , <= 0.9.18',
         'numpy',
         'tqdm',
         'six'
