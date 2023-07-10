@@ -16,14 +16,14 @@ from fastdatasets.lmdb import writer as lmdb_writer, LMDB, load_dataset as lmdb_
 from fastdatasets.memory import writer as memory_writer, MEMORY, load_dataset as memory_loader
 from fastdatasets.arrow import writer as arrow_writer,load_dataset as arrow_loader
 from fastdatasets.parquet import writer as parquet_writer,load_dataset as parquet_loader
-from .parallel import ParallelStruct, parallel_apply
+from .parallel import ParallelNode, parallel_apply
 
 
 __all__ = [
     'E_file_backend',
     'NumpyWriterAdapter',
     'NumpyReaderAdapter',
-    'ParallelStruct',
+    'ParallelNode',
     'parallel_apply',
     'ParallelNumpyWriter'
 ]
@@ -334,9 +334,9 @@ class NumpyReaderAdapter:
         return dataset
 
 
-class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
+class ParallelNumpyWriter(ParallelNode, metaclass=Final):
     def __init__(self, *args, **kwargs):
-        ParallelStruct.__init__(self, *args, **kwargs)
+        ParallelNode.__init__(self, *args, **kwargs)
         self.batch_keys = []
         self.batch_values = []
         self.total_num = 0
@@ -375,7 +375,10 @@ class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
         self.schema = self.numpy_writer.schema
         self.write_batch_size = self.numpy_writer.buffer_batch_size
 
-    def write(self, data, input_hook_fn: typing.Callable, fn_args: typing.Union[typing.Tuple, typing.Dict],
+    def write(self,
+              data: typing.Union[typing.Sequence,typing.Iterator],
+              input_hook_fn: typing.Callable,
+              fn_args: typing.Union[typing.Tuple, typing.Dict],
               write_batch_size=None):
         self.input_hook_fn = input_hook_fn
         self.fn_args = fn_args
@@ -385,8 +388,10 @@ class ParallelNumpyWriter(ParallelStruct, metaclass=Final):
 
         if write_batch_size is None or write_batch_size <= 0:
             write_batch_size = self.numpy_writer.buffer_batch_size
-            if write_batch_size >= len(data):
-                write_batch_size = len(data) // 2
+
+            if isinstance(data,typing.Sequence):
+                if write_batch_size >= len(data):
+                    write_batch_size = len(data) // 2
 
         if write_batch_size <= 0:
             write_batch_size = 1
