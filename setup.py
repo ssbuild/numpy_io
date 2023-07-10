@@ -7,7 +7,7 @@ ignore = []
 
 setup(
     name='numpy-io',
-    version='0.0.5',
+    version='0.0.7',
     description='an easy training architecture',
     long_description='numpy-io: https://github.com/ssbuild/numpy-io.git',
     license='Apache License 2.0',
@@ -15,7 +15,7 @@ setup(
     author='ssbuild',
     author_email='9727464@qq.com',
     install_requires=[
-        'fastdatasets>=0.9.11 , <= 0.9.13',
+        'fastdatasets>=0.9.14 , <= 0.9.20',
         'numpy',
         'tqdm',
         'six'

@@ -21,7 +21,6 @@ class DataWriteHelper:
                  num_process_worker=0,
                  shuffle=True):
         assert E_file_backend.from_string(backend) is not None
-
         self.input_fn = input_fn
         self.input_fn_args = input_fn_args
         self.outfile = outfile
@@ -37,15 +36,14 @@ class DataWriteHelper:
         self._backend_type = value
 
     # 多进程写大文件
-    def save(self,data: list,
+    def save(self,data: typing.Union[typing.Sequence,typing.Iterator],
              options=None,
              parquet_options: typing.Optional = None,
              schema: typing.Optional[typing.Dict] = None,
              leveldb_write_buffer_size=1024 * 1024 * 512,
              leveldb_max_file_size=10 * 1024 * 1024 * 1024,
              lmdb_map_size=1024 * 1024 * 1024 * 150,
-             batch_size=None
-             ):
+             batch_size=None):
 
         self._parallel_writer.open(self.outfile ,
                                    backend=self.backend_type,
