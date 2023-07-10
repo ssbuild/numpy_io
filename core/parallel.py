@@ -141,7 +141,7 @@ def parallel_apply(data: typing.Union[typing.Sequence,typing.Iterator],
 
 
     #生成消费都是多进程
-    if parallel_node.num_process_worker > 0 and parallel_node.num_process_worker > 0:
+    if parallel_node.num_process_worker > 0:
         pools = []
         for _ in range(parallel_node.num_process_worker):
             p = Process(target=produce_input,

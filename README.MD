@@ -1,4 +1,5 @@
 ## update information
+    07-10 0.0.7 support iter writer
     07-06 0.0.5.post0 fix fastdatasets>=0.9.14
 
 
