@@ -31,7 +31,7 @@ def load_tokenizer(tokenizer_name,
         tokenizer_kwargs['use_fast'] = use_fast_tokenizer
 
     if class_name is not None:
-        tokenizer = class_name.from_pretrained(tokenizer_name, **tokenizer_kwargs)
+        tokenizer = class_name.from_pretrained(tokenizer_name or model_name_or_path, **tokenizer_kwargs)
     elif tokenizer_name:
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, **tokenizer_kwargs)
     elif model_name_or_path:
@@ -79,7 +79,7 @@ def load_configure(config_name,
         config_kwargs.update(tmp_kwargs)
 
     if class_name is not None:
-        config = class_name.from_pretrained(config_name, **config_kwargs)
+        config = class_name.from_pretrained(config_name or model_name_or_path, **config_kwargs)
     elif isinstance(config_name,PretrainedConfig):
         for k,v in config_kwargs.items():
             setattr(config_name,k,v)
