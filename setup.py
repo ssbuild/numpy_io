@@ -3,22 +3,25 @@
 
 from setuptools import setup, find_packages
 
-ignore = []
+install_requires = [
+    'fastdatasets>=0.9.14 , <= 0.10',
+    'numpy',
+    'tqdm',
+    'six'
+],
 
 setup(
     name='numpy-io',
-    version='0.0.7',
+    version='0.0.8',
     description='an easy training architecture',
-    long_description='numpy-io: https://github.com/ssbuild/numpy-io.git',
+    long_description='numpy-io: https://github.com/ssbuild/numpy_io.git',
     license='Apache License 2.0',
-    url='https://github.com/ssbuild/numpy-io',
+    url='https://github.com/ssbuild/numpy_io',
     author='ssbuild',
     author_email='9727464@qq.com',
-    install_requires=[
-        'fastdatasets>=0.9.14 , <= 0.9.20',
-        'numpy',
-        'tqdm',
-        'six'
-    ],
-    packages=[p for p in find_packages() if p not in ignore]
+    install_requires=install_requires,
+    package_dir={"": "src"},
+    packages=find_packages("src"),
+    include_package_data=True,
+    package_data={"": ["**/*.cu", "**/*.cpp", "**/*.cuh", "**/*.h", "**/*.pyx"]},
 )

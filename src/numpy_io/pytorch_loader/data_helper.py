@@ -151,8 +151,7 @@ class DataHelperBase(DataPreprocessCallback):
         #写数据完成
         self.on_data_finalize()
 
-        # 返回制作特征数据的中间文件
-
+    # 返回制作特征数据的中间文件
     def get_intermediate_file(self, intermediate_name, mode):
         if self.backend.startswith('memory'):
             # 内存数据: list
@@ -166,7 +165,8 @@ class DataHelperBase(DataPreprocessCallback):
             logging.info('make data {}...'.format(intermediate_output))
         return intermediate_output
 
-    def make_dataset_with_args(self, input_files,
+    def make_dataset_with_args(self,
+                               input_files,
                                mode,
                                shuffle=False,
                                num_process_worker: int = 0,
@@ -234,37 +234,20 @@ class DataHelperBase(DataPreprocessCallback):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def make_dataset(data: typing.List,
-               input_fn:typing.Callable[[int,typing.Any,tuple],typing.Union[typing.Dict,typing.List,typing.Tuple]],
-               input_fn_args:typing.Tuple,
-               outfile:str,
-               backend: str,
-               overwrite = False,
-               num_process_worker:int = 8,
-               options=None,
-               parquet_options=None,
-               schema=None,
-               leveldb_write_buffer_size=None,
-               leveldb_max_file_size=None,
-               lmdb_map_size=None,
-               batch_size=None
-                 ):
+                 input_fn:typing.Callable[[int,typing.Any,tuple],typing.Union[typing.Dict,typing.List,typing.Tuple]],
+                 input_fn_args:typing.Tuple,
+                 outfile:str,
+                 backend: str,
+                 overwrite = False,
+                 num_process_worker:int = 8,
+                 options=None,
+                 parquet_options=None,
+                 schema=None,
+                 leveldb_write_buffer_size=None,
+                 leveldb_max_file_size=None,
+                 lmdb_map_size=None,
+                 batch_size=None):
 
     if not os.path.exists(outfile) or overwrite:
         fw = DataWriteHelper(input_fn,input_fn_args,outfile,backend,num_process_worker)

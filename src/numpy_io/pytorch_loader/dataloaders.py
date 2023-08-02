@@ -205,6 +205,7 @@ def load_random_sampler(files: typing.Union[typing.List, str],
     )
     if dataset is None:
         return None
+
     return DataLoader(dataset, batch_size=batch_size,
                       shuffle=False if isinstance(dataset, IterableDataset) else shuffle,
                       collate_fn=collate_fn,
