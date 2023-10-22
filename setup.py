@@ -12,7 +12,7 @@ install_requires = [
 
 setup(
     name='numpy-io',
-    version='0.0.9',
+    version='0.0.10',
     description='an easy training architecture',
     long_description='numpy-io: https://github.com/ssbuild/numpy_io.git',
     license='Apache License 2.0',

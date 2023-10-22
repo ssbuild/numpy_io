@@ -16,6 +16,8 @@ __all__ = [
     "load_random_sampler",
     'load_tokenizer',
     'load_configure',
+    'load_imageprocesser',
+    'load_processer',
 ]
 
 class DataPreprocessCallback(object):

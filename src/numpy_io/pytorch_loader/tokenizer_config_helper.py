@@ -2,7 +2,7 @@
 # @Author  : ssbuild
 # @Time    : 2022/11/4 13:31
 
-from transformers import AutoTokenizer, AutoConfig,AutoImageProcessor,AutoProcessor, CONFIG_MAPPING, PretrainedConfig
+from transformers import AutoTokenizer, AutoConfig,AutoImageProcessor,AutoProcessor,AutoFeatureExtractor, CONFIG_MAPPING, PretrainedConfig
 
 __all__ = [
     'load_tokenizer',
@@ -159,3 +159,32 @@ def load_processer(processer_name,
             "You can do it from another script, save it, and load it from here, using --processer_name."
         )
     return processer
+
+def load_feature_extractor(feature_extractor_name,
+                           model_name_or_path=None,
+                           class_name = None,
+                           cache_dir="",
+                           model_revision="main",
+                           use_auth_token=None,
+                           **kwargs):
+
+    ft_kwargs = {
+        "cache_dir": cache_dir,
+        "revision": model_revision,
+        "use_auth_token": True if use_auth_token else None,
+        **kwargs
+    }
+
+    if class_name is not None:
+        feature_extractor = class_name.from_pretrained(feature_extractor_name or model_name_or_path, **ft_kwargs)
+    elif feature_extractor_name:
+        feature_extractor = AutoFeatureExtractor.from_pretrained(feature_extractor_name, **ft_kwargs)
+    elif model_name_or_path:
+        feature_extractor = AutoFeatureExtractor.from_pretrained(model_name_or_path, **ft_kwargs)
+    else:
+        raise ValueError(
+            "You are instantiating a new processer from scratch. This is not supported by this script."
+            "You can do it from another script, save it, and load it from here, using --feature_extractor_name."
+        )
+    return feature_extractor
+
