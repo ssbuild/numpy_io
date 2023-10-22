@@ -18,6 +18,7 @@ __all__ = [
     'load_configure',
     'load_imageprocesser',
     'load_processer',
+    'load_feature_extractor',
 ]
 
 class DataPreprocessCallback(object):

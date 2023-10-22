@@ -9,6 +9,7 @@ __all__ = [
     'load_configure',
     'load_imageprocesser',
     'load_processer',
+    'load_feature_extractor',
 ]
 
 def load_tokenizer(tokenizer_name,
