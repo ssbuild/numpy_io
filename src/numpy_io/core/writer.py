@@ -3,7 +3,6 @@
 
 
 import typing
-
 from .numpyadapter import NumpyWriterAdapter, ParallelNumpyWriter,E_file_backend
 
 __all__ = [

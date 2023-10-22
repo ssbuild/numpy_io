@@ -2,11 +2,13 @@
 # @Author  : ssbuild
 # @Time    : 2022/11/4 13:31
 
-from transformers import AutoTokenizer, AutoConfig, CONFIG_MAPPING, PretrainedConfig
+from transformers import AutoTokenizer, AutoConfig,AutoImageProcessor,AutoProcessor, CONFIG_MAPPING, PretrainedConfig
 
 __all__ = [
     'load_tokenizer',
     'load_configure',
+    'load_imageprocesser',
+    'load_processer',
 ]
 
 def load_tokenizer(tokenizer_name,
@@ -99,3 +101,61 @@ def load_configure(config_name,
     if config_overrides is not None:
         config.update_from_string(config_overrides)
     return config
+
+
+def load_imageprocesser(imageprocesser_name,
+                        model_name_or_path=None,
+                        class_name = None,
+                        cache_dir="",
+                        model_revision="main",
+                        use_auth_token=None,
+                        **kwargs):
+
+    image_kwargs = {
+        "cache_dir": cache_dir,
+        "revision": model_revision,
+        "use_auth_token": True if use_auth_token else None,
+        **kwargs
+    }
+
+    if class_name is not None:
+        image_processer = class_name.from_pretrained(imageprocesser_name or model_name_or_path, **image_kwargs)
+    elif imageprocesser_name:
+        image_processer = AutoImageProcessor.from_pretrained(imageprocesser_name, **image_kwargs)
+    elif model_name_or_path:
+        image_processer = AutoImageProcessor.from_pretrained(model_name_or_path, **image_kwargs)
+    else:
+        raise ValueError(
+            "You are instantiating a new imageprocesser from scratch. This is not supported by this script."
+            "You can do it from another script, save it, and load it from here, using --imageprocesser_name."
+        )
+    return image_processer
+
+
+def load_processer(processer_name,
+                   model_name_or_path=None,
+                   class_name = None,
+                   cache_dir="",
+                   model_revision="main",
+                   use_auth_token=None,
+                   **kwargs):
+
+    image_kwargs = {
+        "cache_dir": cache_dir,
+        "revision": model_revision,
+        "use_auth_token": True if use_auth_token else None,
+        **kwargs
+    }
+
+    if class_name is not None:
+        processer = class_name.from_pretrained(processer_name or model_name_or_path, **image_kwargs)
+    elif processer_name:
+        processer = AutoProcessor.from_pretrained(processer_name, **image_kwargs)
+    elif model_name_or_path:
+        processer = AutoProcessor.from_pretrained(model_name_or_path, **image_kwargs)
+    else:
+        raise ValueError(
+            "You are instantiating a new processer from scratch. This is not supported by this script."
+            "You can do it from another script, save it, and load it from here, using --processer_name."
+        )
+    return processer
